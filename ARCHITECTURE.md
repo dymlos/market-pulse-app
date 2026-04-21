@@ -18,14 +18,15 @@ Preparar una app web real que corra primero en una sola PC, sin hosting obligato
 - `SQLite`
 
 ## Decision de esta iteracion
-Se scaffoldeo la base real de la app con el stack definido para dejar:
+Se completo el modelo de datos de etapa 1 con persistencia versionada para dejar:
 
 - entorno ejecutable en localhost
 - shell de navegacion base
-- estructura preparada para crecimiento incremental
-- persistencia local configurada
+- esquema Prisma alineado al MVP causal
+- migracion inicial versionada
+- seed demo local para explorar el dominio
 
-Todavia no se implementa logica causal profunda ni automatizaciones complejas. Este bloque existe para dejar una fundacion limpia y util.
+Todavia no se implementa logica causal profunda ni CRUD completo. Este bloque existe para dejar una fundacion limpia y util.
 
 ## Capas actuales
 ### 1. Presentacion
@@ -55,15 +56,52 @@ Ubicacion:
 ### 3. Persistencia
 Responsable de:
 
-- esquema de datos inicial
-- cliente Prisma
-- conexion a SQLite local
+- esquema de datos de etapa 1
+- cliente Prisma generado localmente
+- migraciones versionadas
+- SQLite local con datos demo
 
 Ubicacion:
 
 - `prisma/schema.prisma`
+- `prisma/migrations/`
+- `prisma/seed.mjs`
+- `src/generated/prisma/`
 - `src/lib/prisma.ts`
-- `data/market-pulse.db`
+- `scripts/db.mjs`
+- `data/market-pulse.local.db`
+
+## Modelo de datos de esta iteracion
+### Nucleo causal
+- `Project`: espacio de trabajo que agrupa publicaciones, busquedas, imports, insights y oportunidades.
+- `Listing`: publicacion propia vinculada a un proyecto, con campos operativos de referencia como `externalId`, `sku`, `title`, `currentPrice` y `availableStock`.
+- `ListingMetricSnapshot`: snapshot por fecha para una publicacion. Guarda visitas, ventas en unidades, conversion, facturacion, stock, precio, gasto publicitario y notas.
+- `ChangeEvent`: evento operativo sobre una publicacion. Guarda fecha, tipo, detalle, valor anterior, valor nuevo, comentario, responsable e hipotesis.
+
+### Contexto competitivo minimo
+- `TrackedSearch`: busqueda monitoreada por proyecto.
+- `SearchSnapshot`: snapshot temporal de una busqueda monitoreada.
+- `SearchResultItem`: resultado observado dentro de un snapshot, con posicion, titulo observado, precio observado, vendedor observado, flags visibles y vinculos opcionales a competidor o publicacion propia.
+- `Competitor`: competidor observado a nivel proyecto. Se conecta a las busquedas a traves de resultados observados, sin forzar una relacion artificial extra.
+
+### Soporte operativo
+- `CsvImport`: registro simple de importaciones CSV con tipo, archivo, estado y conteo de filas.
+- `Insight`: lectura heuristica o futura salida de IA vinculable a proyecto y opcionalmente a publicacion o busqueda.
+- `OpportunitySignal`: senal accionable vinculable a proyecto y opcionalmente a publicacion o busqueda.
+
+## Relaciones clave
+- `Project -> Listing` es la relacion principal del MVP.
+- `Listing -> ListingMetricSnapshot` y `Listing -> ChangeEvent` modelan la memoria operativa antes/despues.
+- `Project -> TrackedSearch -> SearchSnapshot -> SearchResultItem` modela el contexto competitivo minimo.
+- `SearchResultItem` puede apuntar a `Competitor` o a `Listing` para distinguir presencia propia y ajena en una misma observacion.
+- `Insight` y `OpportunitySignal` se cuelgan del proyecto y opcionalmente de una publicacion o busqueda para evitar sobreacoplar la capa explicativa.
+
+## Decisiones de naming
+- Se reemplazo `MetricSnapshot` por `ListingMetricSnapshot` para dejar explicito que el snapshot pertenece a una publicacion propia.
+- Se reemplazo `ImportJob` por `CsvImport` porque en etapa 1 se prioriza registro de importaciones locales simples, no pipelines complejos.
+- Se reemplazo `CompetitionSnapshot` por `SearchSnapshot` y se agrego `SearchResultItem` para representar mejor snapshots de busqueda y share of shelf visible.
+- Se reemplazo `Opportunity` por `OpportunitySignal` para reflejar que se modelan senales operativas, no oportunidades concluyentes.
+- En metricas se uso `salesUnits` y `revenue` para separar claramente ventas en unidades de facturacion.
 
 ## Propuesta de crecimiento
 ### Nucleo causal
@@ -89,10 +127,11 @@ Ubicacion:
 En esta etapa, el flujo ideal es:
 
 1. El usuario corre la app en localhost.
-2. La app guarda datos en SQLite local.
-3. Los imports entran por carga manual o CSV.
-4. Los snapshots y cambios quedan disponibles para timeline e insights.
-5. Todo puede probarse sin servidor publico.
+2. La base se crea desde migraciones versionadas y seed demo local.
+3. La app guarda datos en SQLite local.
+4. Los imports entran por carga manual o CSV.
+5. Los snapshots y cambios quedan disponibles para timeline e insights.
+6. Todo puede probarse sin servidor publico.
 
 ## Que no hacer por ahora
 - no introducir microservicios

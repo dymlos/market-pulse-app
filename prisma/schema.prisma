@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -17,133 +18,311 @@ enum ListingStatus {
   ACTIVE
   PAUSED
   DRAFT
+  ENDED
   ARCHIVED
 }
 
-enum ChangeConfidence {
+enum ChangeEventType {
+  PRICE_UPDATE
+  TITLE_UPDATE
+  IMAGE_UPDATE
+  DESCRIPTION_UPDATE
+  PROMOTION_UPDATE
+  STOCK_UPDATE
+  ADS_UPDATE
+  SHIPPING_UPDATE
+  CATALOG_UPDATE
+  STATUS_UPDATE
+  OTHER
+}
+
+enum CsvImportType {
+  LISTING_METRICS
+  CHANGE_EVENTS
+  LISTINGS
+  SEARCH_RESULTS
+  COMPETITORS
+  OTHER
+}
+
+enum CsvImportStatus {
+  PENDING
+  PROCESSED
+  PARTIAL
+  FAILED
+}
+
+enum SearchSnapshotSource {
+  MANUAL
+  CSV
+  SEMI_MANUAL
+  OTHER
+}
+
+enum InsightType {
+  CHANGE_IMPACT
+  ATTRIBUTION_MIXED
+  COMPETITOR_CONTEXT
+  STOCK_ALERT
+  VISIBILITY_ALERT
+  LEARNING_NOTE
+  OTHER
+}
+
+enum InsightConfidence {
   LOW
   MEDIUM
   HIGH
 }
 
-enum ImportStatus {
-  PENDING
-  PROCESSED
-  FAILED
+enum InsightStatus {
+  NEW
+  REVIEWED
+  DISMISSED
+  ARCHIVED
+}
+
+enum OpportunityType {
+  VISIBILITY_GAP
+  PRICE_GAP
+  STOCK_ADVANTAGE
+  COMPETITOR_EXIT
+  COMPETITOR_PRESSURE
+  ASSORTMENT_GAP
+  OTHER
+}
+
+enum OpportunitySeverity {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 enum OpportunityStatus {
-  PENDING
+  NEW
   REVIEWED
   DISMISSED
   ACTIONED
 }
 
 model Project {
-  id                   String                @id @default(cuid())
-  name                 String
-  slug                 String                @unique
-  marketplace          String                @default("mercado-libre")
-  status               ProjectStatus         @default(ACTIVE)
-  notes                String?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  listings             Listing[]
-  importJobs           ImportJob[]
-  competitionSnapshots CompetitionSnapshot[]
-  opportunities        Opportunity[]
+  id                 String              @id @default(cuid())
+  name               String
+  slug               String              @unique
+  marketplace        String              @default("mercado-libre")
+  currencyCode       String              @default("ARS")
+  status             ProjectStatus       @default(ACTIVE)
+  notes              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  listings           Listing[]
+  trackedSearches    TrackedSearch[]
+  competitors        Competitor[]
+  csvImports         CsvImport[]
+  insights           Insight[]
+  opportunitySignals OpportunitySignal[]
 }
 
 model Listing {
-  id              String           @id @default(cuid())
-  projectId       String
-  externalId      String?
-  sku             String?
-  title           String
-  status          ListingStatus    @default(ACTIVE)
-  marketplace     String           @default("mercado-libre")
-  notes           String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  changeEvents    ChangeEvent[]
-  metricSnapshots MetricSnapshot[]
+  id                      String                 @id @default(cuid())
+  projectId               String
+  externalId              String?
+  sku                     String?
+  title                   String
+  status                  ListingStatus          @default(ACTIVE)
+  marketplace             String                 @default("mercado-libre")
+  permalink               String?
+  categoryName            String?
+  brand                   String?
+  currentPrice            Float?
+  availableStock          Int?
+  notes                   String?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  project                 Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  metricSnapshots         ListingMetricSnapshot[]
+  changeEvents            ChangeEvent[]
+  insights                Insight[]
+  opportunitySignals      OpportunitySignal[]
+  observedInSearchResults SearchResultItem[]     @relation("OwnListingSearchResults")
 
-  @@index([projectId])
+  @@index([projectId, status])
+  @@index([projectId, title])
+  @@unique([projectId, externalId])
+}
+
+model ListingMetricSnapshot {
+  id             String   @id @default(cuid())
+  listingId      String
+  snapshotDate   DateTime
+  visits         Int?
+  salesUnits     Int?
+  conversionRate Float?
+  revenue        Float?
+  availableStock Int?
+  price          Float?
+  adSpend        Float?
+  notes          String?
+  createdAt      DateTime @default(now())
+  listing        Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, snapshotDate])
+  @@index([snapshotDate])
 }
 
 model ChangeEvent {
-  id             String           @id @default(cuid())
-  projectId      String?
-  listingId      String?
-  changeType     String
-  title          String
-  detail         String?
-  reason         String?
-  actor          String?
-  evidenceUrl    String?
-  happenedAt     DateTime
-  confidence     ChangeConfidence @default(LOW)
-  createdAt      DateTime         @default(now())
-  listing        Listing?         @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  id            String          @id @default(cuid())
+  listingId     String
+  occurredAt    DateTime
+  type          ChangeEventType
+  detail        String
+  previousValue String?
+  newValue      String?
+  comment       String?
+  actorName     String?
+  hypothesis    String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  listing       Listing         @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  @@index([listingId, happenedAt])
+  @@index([listingId, occurredAt])
+  @@index([type, occurredAt])
 }
 
-model MetricSnapshot {
-  id             String   @id @default(cuid())
-  listingId       String
-  snapshotDate    DateTime
-  visits          Int?
-  unitsSold       Int?
-  revenue         Float?
-  conversionRate  Float?
-  organicPosition Int?
+model TrackedSearch {
+  id                 String              @id @default(cuid())
+  projectId          String
+  name               String
+  query              String
+  marketplace        String              @default("mercado-libre")
+  isActive           Boolean             @default(true)
+  notes              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  project            Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  snapshots          SearchSnapshot[]
+  insights           Insight[]
+  opportunitySignals OpportunitySignal[]
+
+  @@index([projectId, isActive])
+  @@index([projectId, query])
+}
+
+model Competitor {
+  id                String             @id @default(cuid())
+  projectId         String
+  name              String
+  sellerHandle      String?
+  marketplaceSellerId String?
+  notes             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  searchResultItems SearchResultItem[]
+
+  @@index([projectId, name])
+}
+
+model SearchSnapshot {
+  id              String               @id @default(cuid())
+  trackedSearchId String
+  capturedAt      DateTime
+  source          SearchSnapshotSource @default(MANUAL)
+  resultsCount    Int?
   notes           String?
-  createdAt       DateTime @default(now())
-  listing         Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt       DateTime             @default(now())
+  trackedSearch   TrackedSearch        @relation(fields: [trackedSearchId], references: [id], onDelete: Cascade)
+  results         SearchResultItem[]
 
-  @@index([listingId, snapshotDate])
+  @@unique([trackedSearchId, capturedAt])
+  @@index([capturedAt])
 }
 
-model ImportJob {
-  id         String       @id @default(cuid())
-  projectId   String?
-  sourceType  String
-  fileName    String?
-  status      ImportStatus @default(PENDING)
+model SearchResultItem {
+  id                String         @id @default(cuid())
+  searchSnapshotId  String
+  competitorId      String?
+  ownListingId      String?
+  position          Int
+  externalListingId String?
+  observedTitle     String
+  observedPrice     Float?
+  observedSellerName String?
+  visibleFlags      String?
+  isOwnListing      Boolean        @default(false)
+  isSponsored       Boolean        @default(false)
+  hasFreeShipping   Boolean?
+  hasFull           Boolean?
+  isCatalogListing  Boolean?
+  notes             String?
+  createdAt         DateTime       @default(now())
+  searchSnapshot    SearchSnapshot @relation(fields: [searchSnapshotId], references: [id], onDelete: Cascade)
+  competitor        Competitor?    @relation(fields: [competitorId], references: [id], onDelete: SetNull)
+  ownListing        Listing?       @relation("OwnListingSearchResults", fields: [ownListingId], references: [id], onDelete: SetNull)
+
+  @@unique([searchSnapshotId, position])
+  @@index([competitorId])
+  @@index([ownListingId])
+  @@index([isOwnListing])
+}
+
+model CsvImport {
+  id          String          @id @default(cuid())
+  projectId   String
+  importedAt  DateTime        @default(now())
+  type        CsvImportType
+  fileName    String
+  status      CsvImportStatus @default(PENDING)
+  totalRows   Int?
+  validRows   Int?
+  invalidRows Int?
   summary     String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@index([projectId, createdAt])
+  @@index([projectId, importedAt])
+  @@index([status])
 }
 
-model CompetitionSnapshot {
-  id             String    @id @default(cuid())
-  projectId      String?
-  searchTerm     String
-  takenAt        DateTime
-  ownPresenceRank Int?
-  observedCount  Int?
-  notes          String?
-  createdAt      DateTime  @default(now())
-  project        Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+model Insight {
+  id               String            @id @default(cuid())
+  projectId        String
+  listingId        String?
+  trackedSearchId  String?
+  type             InsightType
+  confidence       InsightConfidence @default(LOW)
+  summary          String
+  recordedAt       DateTime          @default(now())
+  status           InsightStatus     @default(NEW)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listing          Listing?          @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  trackedSearch    TrackedSearch?    @relation(fields: [trackedSearchId], references: [id], onDelete: SetNull)
 
-  @@index([projectId, takenAt])
+  @@index([projectId, recordedAt])
+  @@index([listingId])
+  @@index([trackedSearchId])
 }
 
-model Opportunity {
-  id          String             @id @default(cuid())
-  projectId   String?
-  title       String
-  hypothesis  String
-  priority    String             @default("medium")
-  status      OpportunityStatus  @default(PENDING)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-  project     Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+model OpportunitySignal {
+  id               String              @id @default(cuid())
+  projectId        String
+  listingId        String?
+  trackedSearchId  String?
+  type             OpportunityType
+  severity         OpportunitySeverity @default(MEDIUM)
+  explanation      String
+  status           OpportunityStatus   @default(NEW)
+  detectedAt       DateTime            @default(now())
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  project          Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  listing          Listing?            @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  trackedSearch    TrackedSearch?      @relation(fields: [trackedSearchId], references: [id], onDelete: SetNull)
 
   @@index([projectId, status])
+  @@index([listingId])
+  @@index([trackedSearchId])
 }

@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "db:generate": "prisma generate",
-    "db:push": "node scripts/db-push.mjs",
-    "postinstall": "prisma generate"
+    "db:generate": "set \"PRISMA_SCHEMA_ENGINE_BINARY=F:\\repo\\Market Pulse\\node_modules\\@prisma\\engines\\schema-engine-windows.exe\" && prisma generate",
+    "db:push": "node scripts/db.mjs apply",
+    "db:seed": "node prisma/seed.mjs",
+    "db:reset": "node scripts/db.mjs reset",
+    "postinstall": "npm run db:generate"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",

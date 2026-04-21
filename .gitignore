@@ -35,6 +35,7 @@ data/*.sqlite
 data/*.sqlite-journal
 prisma/*.db
 prisma/*.db-journal
+src/generated/
 
 # Test artifacts
 playwright-report/

@@ -48,22 +48,30 @@ Entregables principales:
 - `.logs/2026-04-21-scaffold-app-base.md`
 
 ## Etapa 3 - Modelo de datos del nucleo causal
-Estado: siguiente bloque recomendado
+Estado: completada en esta iteracion
 
 Objetivo:
 
 - afinar entidades del nucleo causal
 - modelar proyectos, publicaciones, eventos de cambio y snapshots metricos
-- revisar si hace falta semilla inicial o datos demo persistidos
+- dejar migraciones y seed demo consistentes con la etapa 1 local-first
 
 Resultado esperado:
 
 - esquema coherente con la tesis del producto
 - persistencia local mantenible
 - base lista para CRUD real
+- datos demo utiles para explorar el MVP sin dependencias externas
+
+Resultado logrado:
+
+- esquema Prisma alineado al circuito causal del MVP
+- migracion inicial versionada en `prisma/migrations/`
+- seed demo local con proyectos, publicaciones, cambios, snapshots, competencia, insights y oportunidades
+- SQLite local recreable con comandos del repo
 
 ## Etapa 4 - CRUD base
-Estado: pendiente
+Estado: siguiente bloque recomendado
 
 Objetivo:
 

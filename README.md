@@ -13,10 +13,12 @@ Esta iteracion deja funcionando la **app base en localhost** con:
 - `Tailwind CSS`
 - `Prisma`
 - `SQLite` local
+- migracion inicial versionada
+- seed demo realista para explorar el dominio
 - layout general con sidebar, header y contenedor principal
 - navegacion inicial para los modulos del MVP
 
-Todavia no se implementa la logica profunda del negocio. El objetivo de este bloque fue dejar una base clara, ejecutable y preparada para crecer sin sobreconstruccion.
+Todavia no se implementa el CRUD completo ni la logica profunda del negocio. El objetivo de este bloque fue dejar una base clara, ejecutable y preparada para crecer sin sobreconstruccion.
 
 ## Stack elegido
 - `Next.js` con App Router
@@ -26,7 +28,7 @@ Todavia no se implementa la logica profunda del negocio. El objetivo de este blo
 - `SQLite`
 - `npm` como flujo operativo disponible en este entorno
 
-`pnpm` sigue siendo una opcion valida a futuro, pero en esta maquina el scaffold queda verificado con `npm`.
+`pnpm` sigue siendo una opcion valida a futuro, pero en esta maquina el flujo verificado queda con `npm`.
 
 ## Modulos iniciales de navegacion
 La app incluye paginas base para:
@@ -49,8 +51,10 @@ Estas paginas ya tienen estructura visual, copy alineado al producto y placehold
 |-- Documentación/
 |-- data/
 |-- prisma/
-|   `-- schema.prisma
-|-- public/
+|   |-- migrations/
+|   |-- schema.prisma
+|   `-- seed.mjs
+|-- scripts/
 |-- src/
 |   |-- app/
 |   |   |-- (workspace)/
@@ -58,6 +62,7 @@ Estas paginas ya tienen estructura visual, copy alineado al producto y placehold
 |   |-- components/
 |   |   |-- layout/
 |   |   `-- ui/
+|   |-- generated/
 |   `-- lib/
 |-- .env.example
 |-- ARCHITECTURE.md
@@ -78,23 +83,43 @@ Estas paginas ya tienen estructura visual, copy alineado al producto y placehold
 npm install
 ```
 
-2. Generar Prisma Client y crear la base SQLite local:
+2. Generar Prisma Client:
 
 ```bash
-npm run db:push
+npm run db:generate
 ```
 
-3. Levantar la app:
+3. Recrear la base local desde migraciones:
+
+```bash
+npm run db:reset
+```
+
+4. Cargar datos demo:
+
+```bash
+npm run db:seed
+```
+
+5. Levantar la app:
 
 ```bash
 npm run dev
 ```
 
-4. Abrir en:
+6. Abrir en:
 
 ```text
 http://localhost:3000
 ```
+
+## Flujo de base de datos
+- `npm run db:push`: aplica migraciones versionadas pendientes sin borrar la base si ya esta alineada.
+- `npm run db:reset`: recrea la SQLite local desde cero usando las migraciones versionadas.
+- `npm run db:seed`: inserta datos demo del MVP.
+- `npm run db:generate`: regenera el client de Prisma en `src/generated/prisma`.
+
+Si venis de una base anterior del scaffold sin historial de migraciones, conviene usar `npm run db:reset` y despues `npm run db:seed`.
 
 ## Scripts disponibles
 - `npm run dev`
@@ -103,9 +128,17 @@ http://localhost:3000
 - `npm run lint`
 - `npm run db:generate`
 - `npm run db:push`
+- `npm run db:reset`
+- `npm run db:seed`
 
 ## Persistencia local
-La base de datos local se crea en:
+La base de datos operativa se crea en:
+
+```text
+data/market-pulse.local.db
+```
+
+Tambien queda preservada la base previa del scaffold como referencia local:
 
 ```text
 data/market-pulse.db
@@ -118,13 +151,26 @@ La idea sigue siendo local-first:
 - sin scraping masivo como base del MVP
 - preparada para crecer despues a un deploy real si hiciera falta
 
-## Que sigue despues de este bloque
-El siguiente bloque recomendado es construir el **nucleo causal minimo**:
+## Datos demo incluidos
+El seed actual crea:
 
-- modelo de datos afinado
+- 1 proyecto demo
+- 3 publicaciones propias
+- 9 snapshots metricos
+- 6 eventos de cambio
+- 2 busquedas monitoreadas
+- 3 competidores
+- 2 snapshots de competencia con resultados observados
+- 2 registros de importacion CSV
+- 3 insights
+- 2 senales de oportunidad
+
+## Que sigue despues de este bloque
+El siguiente bloque recomendado es construir el **CRUD base del nucleo causal**:
+
 - CRUD de proyectos
 - CRUD de publicaciones
 - registro de cambios operativos
-- primer flujo real de memoria operativa
+- consulta de snapshots metricos y timeline
 
-Despues de eso ya conviene pasar a snapshots metricos, importacion CSV y timeline causal.
+Despues de eso ya conviene pasar a importacion CSV real y vista causal antes/despues.
