@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  DRAFT
+  ARCHIVED
+}
+
+enum ChangeConfidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum OpportunityStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+model Project {
+  id                   String                @id @default(cuid())
+  name                 String
+  slug                 String                @unique
+  marketplace          String                @default("mercado-libre")
+  status               ProjectStatus         @default(ACTIVE)
+  notes                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  listings             Listing[]
+  importJobs           ImportJob[]
+  competitionSnapshots CompetitionSnapshot[]
+  opportunities        Opportunity[]
+}
+
+model Listing {
+  id              String           @id @default(cuid())
+  projectId       String
+  externalId      String?
+  sku             String?
+  title           String
+  status          ListingStatus    @default(ACTIVE)
+  marketplace     String           @default("mercado-libre")
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  changeEvents    ChangeEvent[]
+  metricSnapshots MetricSnapshot[]
+
+  @@index([projectId])
+}
+
+model ChangeEvent {
+  id             String           @id @default(cuid())
+  projectId      String?
+  listingId      String?
+  changeType     String
+  title          String
+  detail         String?
+  reason         String?
+  actor          String?
+  evidenceUrl    String?
+  happenedAt     DateTime
+  confidence     ChangeConfidence @default(LOW)
+  createdAt      DateTime         @default(now())
+  listing        Listing?         @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([listingId, happenedAt])
+}
+
+model MetricSnapshot {
+  id             String   @id @default(cuid())
+  listingId       String
+  snapshotDate    DateTime
+  visits          Int?
+  unitsSold       Int?
+  revenue         Float?
+  conversionRate  Float?
+  organicPosition Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+  listing         Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, snapshotDate])
+}
+
+model ImportJob {
+  id         String       @id @default(cuid())
+  projectId   String?
+  sourceType  String
+  fileName    String?
+  status      ImportStatus @default(PENDING)
+  summary     String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+}
+
+model CompetitionSnapshot {
+  id             String    @id @default(cuid())
+  projectId      String?
+  searchTerm     String
+  takenAt        DateTime
+  ownPresenceRank Int?
+  observedCount  Int?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  project        Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, takenAt])
+}
+
+model Opportunity {
+  id          String             @id @default(cuid())
+  projectId   String?
+  title       String
+  hypothesis  String
+  priority    String             @default("medium")
+  status      OpportunityStatus  @default(PENDING)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  project     Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+}

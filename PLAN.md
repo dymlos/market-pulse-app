@@ -1,10 +1,10 @@
 # PLAN.md
 
 ## Estado general
-Objetivo actual: dejar una base de repo ordenada, documentada y lista para empezar el desarrollo sin improvisacion.
+Objetivo actual: dejar una base tecnica ejecutable, ordenada y lista para construir el nucleo causal sin improvisacion.
 
 ## Etapa 1 - Preparacion del repo
-Estado: completada en esta iteracion
+Estado: completada
 
 Incluye:
 
@@ -15,44 +15,52 @@ Incluye:
 - base de entorno y versionado
 - inicializacion de Git local
 
-Entregables de esta etapa:
-
-- `README.md`
-- `AGENTS.md`
-- `ARCHITECTURE.md`
-- `.gitignore`
-- `.env.example`
-- `.codex/config.toml`
-- `.logs/2026-04-21-preparacion-inicial-repo.md`
-- carpetas operativas (`scripts/`, `samples/`, `tests/`, `e2e/`, `public/`, `data/`)
-
 ## Etapa 2 - Scaffold de app
-Estado: pendiente
+Estado: completada en esta iteracion
 
 Objetivo:
 
 - crear la app base con `Next.js + TypeScript + Tailwind`
 - preparar `Prisma + SQLite`
 - dejar scripts de desarrollo local
+- definir shell general de navegacion
 
-Resultado esperado:
+Resultado logrado:
 
 - app ejecutable en localhost
-- estructura inicial de frontend, dominio y persistencia
+- layout base con sidebar, header y contenedor principal
+- paginas iniciales para los modulos principales
+- Prisma configurado sobre SQLite local
+- estructura simple preparada para crecer
 
-## Etapa 3 - Modelo de datos
-Estado: pendiente
+Entregables principales:
+
+- `package.json`
+- `tsconfig.json`
+- `next.config.ts`
+- `eslint.config.mjs`
+- `postcss.config.mjs`
+- `tailwind.config.ts`
+- `prisma/schema.prisma`
+- `src/app/`
+- `src/components/`
+- `src/lib/`
+- `.logs/2026-04-21-scaffold-app-base.md`
+
+## Etapa 3 - Modelo de datos del nucleo causal
+Estado: siguiente bloque recomendado
 
 Objetivo:
 
-- definir entidades del nucleo causal
+- afinar entidades del nucleo causal
 - modelar proyectos, publicaciones, eventos de cambio y snapshots metricos
-- preparar semillas o datos de ejemplo si hace falta
+- revisar si hace falta semilla inicial o datos demo persistidos
 
 Resultado esperado:
 
 - esquema coherente con la tesis del producto
 - persistencia local mantenible
+- base lista para CRUD real
 
 ## Etapa 4 - CRUD base
 Estado: pendiente

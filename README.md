@@ -1,163 +1,130 @@
 # Market Pulse
 
-Market Pulse es una app web **local-first** pensada para analisis operativo de ecommerce, empezando por Mercado Libre.
+Market Pulse es una app web **local-first** para analisis operativo ecommerce, pensada primero para Mercado Libre.
 
-La tesis del producto no es construir otra suite generica de inteligencia competitiva, sino una **bitacora causal operativa** que ayude a responder:
+La tesis del producto sigue siendo la misma:
 
-> Que cambiamos, que paso despues, que otro contexto pudo influir y que aprendemos para la siguiente accion.
+> **No construir otra suite generica de market intelligence, sino una bitacora causal operativa que registre cambios, mida impacto y explique que probablemente paso, usando competencia y oportunidades como contexto.**
 
 ## Estado actual del repositorio
-Esta iteracion deja preparado el terreno del proyecto:
-
-- estructura base de carpetas
-- documentacion operativa
-- convenciones para Codex
-- muestras CSV
-- configuracion inicial de entorno y versionado
-
-Todavia **no se scaffoldeó la app** ni hay una interfaz ejecutable en esta etapa. Eso queda explicitamente separado para la siguiente iteracion para no sobreconstruir antes de validar la base documental, el roadmap y la arquitectura.
-
-## Stack base recomendado
-Para la siguiente etapa se recomienda:
+Esta iteracion deja funcionando la **app base en localhost** con:
 
 - `Next.js` + `TypeScript`
 - `Tailwind CSS`
 - `Prisma`
 - `SQLite` local
-- `pnpm` como package manager recomendado
+- layout general con sidebar, header y contenedor principal
+- navegacion inicial para los modulos del MVP
 
-Motivos:
+Todavia no se implementa la logica profunda del negocio. El objetivo de este bloque fue dejar una base clara, ejecutable y preparada para crecer sin sobreconstruccion.
 
-- corre muy bien en local
-- sirve para CRUD, imports CSV, timelines y vistas operativas
-- Prisma + SQLite simplifican persistencia local-first
-- permite crecer despues a un deploy real sin rehacer toda la app
+## Stack elegido
+- `Next.js` con App Router
+- `TypeScript`
+- `Tailwind CSS`
+- `Prisma`
+- `SQLite`
+- `npm` como flujo operativo disponible en este entorno
 
-## Estructura actual
+`pnpm` sigue siendo una opcion valida a futuro, pero en esta maquina el scaffold queda verificado con `npm`.
+
+## Modulos iniciales de navegacion
+La app incluye paginas base para:
+
+- Dashboard
+- Proyectos
+- Publicaciones
+- Cambios
+- Importaciones
+- Competencia
+- Oportunidades
+- Configuracion
+
+Estas paginas ya tienen estructura visual, copy alineado al producto y placeholders operativos para avanzar luego con CRUD, imports y timeline.
+
+## Estructura principal
 ```text
 .
-|-- .codex/
-|   `-- config.toml
 |-- .logs/
-|   `-- 2026-04-21-preparacion-inicial-repo.md
 |-- Documentación/
-|   |-- 00-indice.md
-|   |-- 01-vision-y-tesis-del-producto.md
-|   |-- 02-resumen-ejecutivo-analisis-competitivo.md
-|   |-- 03-posicionamiento-y-mvp-recomendado.md
-|   |-- 04-alcance-funcional-de-la-app.md
-|   |-- 05-arquitectura-etapa-1-local-first.md
-|   |-- 06-roadmap-por-fases.md
-|   |-- 07-riesgos-y-principios-de-diseno.md
-|   |-- 08-glosario-y-definiciones.md
-|   `-- 09-guia-para-prompts-en-codex.md
 |-- data/
-|   `-- README.md
-|-- e2e/
-|   `-- README.md
+|-- prisma/
+|   `-- schema.prisma
 |-- public/
-|   `-- README.md
-|-- samples/
-|   |-- README.md
-|   `-- csv/
-|       |-- change-events.sample.csv
-|       |-- competitor-snapshot.sample.csv
-|       `-- metric-snapshots.sample.csv
-|-- scripts/
-|   `-- README.md
-|-- tests/
-|   `-- README.md
+|-- src/
+|   |-- app/
+|   |   |-- (workspace)/
+|   |   `-- globals.css
+|   |-- components/
+|   |   |-- layout/
+|   |   `-- ui/
+|   `-- lib/
 |-- .env.example
-|-- .gitignore
-|-- AGENTS.md
 |-- ARCHITECTURE.md
+|-- AGENTS.md
 |-- PLAN.md
-`-- README.md
+|-- eslint.config.mjs
+|-- next.config.ts
+|-- package.json
+|-- postcss.config.mjs
+|-- tailwind.config.ts
+`-- tsconfig.json
 ```
 
-## Como trabajar localmente hoy
-En esta etapa el repositorio es principalmente documental y de preparacion. El flujo local recomendado es:
-
-1. Leer `README.md`, `AGENTS.md`, `PLAN.md`, `ARCHITECTURE.md` y `Documentación/`.
-2. Usar la siguiente iteracion de Codex para scaffoldear la app respetando esta base.
-3. Mantener logs de trabajo en `.logs/` y actualizar `PLAN.md` por bloque.
-
-Cuando se haga el scaffold de la app, el objetivo sera correrla principalmente en localhost con un flujo similar a este:
+## Como correr la app
+1. Instalar dependencias:
 
 ```bash
-pnpm install
-pnpm dev
+npm install
 ```
 
-Si preferis `npm`, se puede soportar tambien, pero la recomendacion inicial queda en `pnpm`.
-
-## Ejecucion local vs futura publicacion
-**Ejecucion local** significa:
-
-- desarrollo y prueba principal en tu PC
-- base de datos local SQLite
-- sin depender de hosting ni servidor publico
-- posibilidad de iterar rapido con datos de prueba, CSV y snapshots manuales
-
-**Publicacion futura** significa:
-
-- empaquetar la misma app web para un entorno remoto
-- eventualmente mover persistencia y secretos a una infraestructura apropiada
-- decidir si se despliega solo el frontend o la app completa con backend y base remota
-
-La arquitectura propuesta apunta a que esa transicion sea posible **sin rehacer todo**.
-
-## GitHub no reemplaza hosting
-Dejo esto explicito porque es importante para el roadmap:
-
-- GitHub sirve para versionado, colaboracion, issues, PRs y CI.
-- GitHub **no reemplaza** un hosting real para una app dinamica con UI interactiva, rutas servidoras y persistencia.
-- Subir el codigo a GitHub no vuelve automaticamente accesible la app como producto web.
-
-## Preview o demo estatica opcional
-Como opcion futura, se podria agregar alguno de estos caminos sin forzar la arquitectura a ser estatica:
-
-- una landing o documentacion estatica publicada con GitHub Pages
-- una demo estatica muy acotada para mostrar pantallas mockeadas
-- Storybook o snapshots visuales si despues hacen falta componentes aislados
-
-Eso puede servir para comunicar o revisar UI, pero **no debe empujar el proyecto a convertirse en una app puramente estatica** si eso perjudica el roadmap local-first con persistencia real.
-
-## Como seguir trabajando con Codex
-Para futuras iteraciones:
-
-1. Pedir bloques funcionales claros y cerrados.
-2. Indicar siempre que lea `AGENTS.md` y `Documentación/`.
-3. Pedir que actualice `PLAN.md` y `.logs/`.
-4. Mantener el foco en bitacora causal antes que inteligencia competitiva generica.
-
-Ejemplos de siguientes prompts razonables:
-
-- scaffoldear la app base con Next.js, TypeScript, Tailwind, Prisma y SQLite
-- definir el modelo de datos del nucleo causal
-- crear CRUD inicial de proyectos y publicaciones
-- preparar importacion CSV de snapshots metricos
-
-## Commits de checkpoints
-Para guardar avances intermedios de forma prolija:
+2. Generar Prisma Client y crear la base SQLite local:
 
 ```bash
-git status
-git add -A
-git commit -m "chore: checkpoint repo base"
+npm run db:push
 ```
 
-Mas adelante conviene usar mensajes mas especificos, por ejemplo:
+3. Levantar la app:
 
-- `chore: scaffold next app`
-- `feat: add project and listing CRUD`
-- `feat: add csv metric import`
-- `docs: refine architecture and roadmap`
+```bash
+npm run dev
+```
 
-## Preparacion para GitHub
-El nombre esperado del repositorio remoto es:
+4. Abrir en:
 
-- `market-pulse`
+```text
+http://localhost:3000
+```
 
-Si el entorno tiene `gh` instalado y autenticado, se puede crear el remoto privado y empujar `main`.
-Si no, este repo igual queda listo para hacerlo manualmente despues.
+## Scripts disponibles
+- `npm run dev`
+- `npm run build`
+- `npm run start`
+- `npm run lint`
+- `npm run db:generate`
+- `npm run db:push`
+
+## Persistencia local
+La base de datos local se crea en:
+
+```text
+data/market-pulse.db
+```
+
+La idea sigue siendo local-first:
+
+- datos en la misma PC
+- sin dependencia obligatoria de APIs externas
+- sin scraping masivo como base del MVP
+- preparada para crecer despues a un deploy real si hiciera falta
+
+## Que sigue despues de este bloque
+El siguiente bloque recomendado es construir el **nucleo causal minimo**:
+
+- modelo de datos afinado
+- CRUD de proyectos
+- CRUD de publicaciones
+- registro de cambios operativos
+- primer flujo real de memoria operativa
+
+Despues de eso ya conviene pasar a snapshots metricos, importacion CSV y timeline causal.
