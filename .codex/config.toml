@@ -1,0 +1,26 @@
+project_name = "Market Pulse"
+default_branch = "main"
+language = "es-AR"
+
+[workflow]
+read_agents_first = true
+read_root_docs_first = true
+read_documentacion_first = true
+update_plan_on_each_block = true
+write_log_on_each_block = true
+
+[product]
+mode = "local-first"
+core = "bitacora causal operativa"
+secondary = "contexto competitivo minimo"
+later = "oportunidades operativas"
+
+[stack]
+frontend = "Next.js + TypeScript + Tailwind"
+database = "SQLite"
+orm = "Prisma"
+
+[git]
+remote_name = "origin"
+expected_repo_name = "market-pulse"
+default_visibility = "private"

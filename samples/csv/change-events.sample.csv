@@ -1,0 +1,3 @@
+project_slug,listing_external_id,changed_at,change_type,field_name,old_value,new_value,actor,source,notes
+demo-proyecto,MLA123456789,2026-04-18T10:30:00-03:00,price_update,price,25999,24999,analista,manual,ajuste para test A
+demo-proyecto,MLA123456789,2026-04-19T15:00:00-03:00,title_update,title,"Auriculares Bluetooth X","Auriculares Bluetooth X con cancelacion",agencia,csv,mejora de claridad comercial

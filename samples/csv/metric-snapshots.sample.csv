@@ -1,0 +1,3 @@
+project_slug,listing_external_id,snapshot_date,visits,orders,revenue,conversion_rate,stock,price,notes
+demo-proyecto,MLA123456789,2026-04-17,420,12,311988,0.0286,34,25999,baseline previa a cambios
+demo-proyecto,MLA123456789,2026-04-20,515,18,449982,0.0350,22,24999,mejora posterior a ajuste de precio y titulo

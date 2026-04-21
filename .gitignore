@@ -1,0 +1,49 @@
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+.vscode/
+
+# Node / frontend
+node_modules/
+.next/
+out/
+dist/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database / local app data
+data/*.db
+data/*.db-journal
+data/*.sqlite
+data/*.sqlite-journal
+prisma/*.db
+prisma/*.db-journal
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Build caches
+.turbo/
+.cache/
+
+# Misc
+tmp/
+temp/
