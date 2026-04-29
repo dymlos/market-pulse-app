@@ -10,13 +10,13 @@ export const navigationItems: NavigationItem[] = [
     href: "/dashboard",
     label: "Dashboard",
     shortLabel: "Inicio",
-    description: "Vista operativa general del proyecto y del stack local-first.",
+    description: "Resumen local con proyectos, publicaciones, cambios recientes y actividad.",
   },
   {
     href: "/proyectos",
     label: "Proyectos",
     shortLabel: "Proyectos",
-    description: "Espacio para agrupar sellers, marcas o cuentas antes del CRUD real.",
+    description: "Espacio para agrupar sellers, marcas o cuentas de trabajo.",
   },
   {
     href: "/publicaciones",
@@ -28,7 +28,7 @@ export const navigationItems: NavigationItem[] = [
     href: "/cambios",
     label: "Cambios",
     shortLabel: "Cambios",
-    description: "Bitacora inicial para futuros eventos operativos y su impacto probable.",
+    description: "Bitacora de eventos operativos sobre publicaciones propias.",
   },
   {
     href: "/importaciones",
@@ -40,7 +40,7 @@ export const navigationItems: NavigationItem[] = [
     href: "/competencia",
     label: "Competencia",
     shortLabel: "Competencia",
-    description: "Contexto competitivo minimo, pensado como complemento y no como nucleo.",
+    description: "Busquedas monitoreadas y snapshots manuales como contexto minimo.",
   },
   {
     href: "/oportunidades",

@@ -4,6 +4,8 @@
 
 :root {
   color-scheme: light;
+  --font-manrope: "Segoe UI", Arial, sans-serif;
+  --font-ibm-plex-mono: "Cascadia Mono", Consolas, monospace;
 }
 
 * {

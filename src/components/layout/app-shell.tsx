@@ -86,8 +86,8 @@ export function AppShell({ children }: PropsWithChildren) {
                     Herramienta operativa para entender que paso y que aprender despues.
                   </h2>
                   <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                    Base tecnica lista para localhost, con foco en claridad, memoria operativa y
-                    crecimiento incremental.
+                    Registra proyectos, publicaciones y cambios para construir memoria operativa
+                    antes de avanzar al timeline causal.
                   </p>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export function AppShell({ children }: PropsWithChildren) {
                   <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
                     Persistencia
                   </div>
-                  <div className="mt-2 font-mono text-sm text-ink">data/market-pulse.db</div>
+                  <div className="mt-2 font-mono text-sm text-ink">data/market-pulse.local.db</div>
                 </div>
               </div>
             </div>

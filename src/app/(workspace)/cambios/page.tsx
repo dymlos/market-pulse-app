@@ -1,42 +1,215 @@
-import { DataTablePreview } from "@/components/ui/data-table-preview";
+import Link from "next/link";
+
+import { ChangeEventType } from "@/generated/prisma";
+import { Badge } from "@/components/ui/badge";
+import { FormMessage } from "@/components/ui/form-message";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
+import { firstParam, formatDateTime, type SearchParamsInput } from "@/lib/format";
+import { changeEventTypeLabels, changeEventTypeOptions } from "@/lib/market-labels";
+import { getChangeEvents, getListingOptions, getProjectOptions } from "@/lib/market-data";
 
-export default function CambiosPage() {
+type CambiosPageProps = {
+  searchParams?: Promise<SearchParamsInput>;
+};
+
+function parseChangeEventType(value?: string) {
+  return value && changeEventTypeOptions.includes(value as ChangeEventType)
+    ? (value as ChangeEventType)
+    : undefined;
+}
+
+export default async function CambiosPage({ searchParams }: CambiosPageProps) {
+  const params = (await searchParams) ?? {};
+  const selectedProjectId = firstParam(params.projectId) || "";
+  const selectedListingId = firstParam(params.listingId) || "";
+  const selectedType = parseChangeEventType(firstParam(params.type));
+  const error = firstParam(params.error);
+
+  const [projects, listings, changes] = await Promise.all([
+    getProjectOptions(),
+    getListingOptions(selectedProjectId || undefined),
+    getChangeEvents({
+      projectId: selectedProjectId || undefined,
+      listingId: selectedListingId || undefined,
+      type: selectedType,
+    }),
+  ]);
+
+  const createHref = selectedListingId ? `/cambios/nuevo?listingId=${selectedListingId}` : "/cambios/nuevo";
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Bitacora operativa"
         title="Cambios"
-        description="Este modulo es el corazon futuro del producto. Por ahora queda lista la pantalla base para registrar eventos y despues conectar impacto probable, evidencia y aprendizaje."
+        description="Registro de acciones propias sobre publicaciones. Esta es la memoria minima para despues mirar impacto probable."
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <SectionCard
-          title="Vista de eventos"
-          description="Todavia no hay registros reales, pero la tabla y el copy ya respetan la logica de atribucion prudente del producto."
-        >
-          <DataTablePreview
-            columns={["Fecha", "Publicacion", "Cambio", "Lectura inicial"]}
-            rows={[
-              ["2026-04-21", "Auriculares Bluetooth Pro", "Ajuste de precio", "Pendiente de evidencia"],
-              ["2026-04-21", "Mouse ergonomico oficina", "Cambio de titulo", "Sin impacto medido aun"],
-            ]}
-          />
-        </SectionCard>
+      <FormMessage message={error} />
 
-        <SectionCard
-          eyebrow="Regla de copy"
-          title="Como hablar de impacto"
-          description="La app tiene que sostener siempre un lenguaje prudente."
-        >
-          <ul className="space-y-3 text-sm leading-6 text-slate-600">
-            <li>Usar impacto probable, explicacion mixta y atribucion debil, moderada o fuerte.</li>
-            <li>No afirmar causalidad exacta sin evidencia suficiente.</li>
-            <li>Registrar razon del cambio, actor y contexto observable.</li>
-          </ul>
-        </SectionCard>
-      </div>
+      <SectionCard
+        action={
+          <Link
+            className="inline-flex rounded-2xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            href={createHref}
+          >
+            Registrar cambio
+          </Link>
+        }
+        title="Listado de cambios"
+        description="Filtra por proyecto, publicacion o tipo para reconstruir rapido que se toco."
+      >
+        <form className="mb-5 grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 lg:grid-cols-[1fr_1fr_0.8fr_auto_auto] lg:items-end">
+          <div>
+            <label className="text-sm font-semibold text-ink" htmlFor="projectId">
+              Proyecto
+            </label>
+            <select
+              className="mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              defaultValue={selectedProjectId}
+              id="projectId"
+              name="projectId"
+            >
+              <option value="">Todos</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-ink" htmlFor="listingId">
+              Publicacion
+            </label>
+            <select
+              className="mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              defaultValue={selectedListingId}
+              id="listingId"
+              name="listingId"
+            >
+              <option value="">Todas</option>
+              {listings.map((listing) => (
+                <option key={listing.id} value={listing.id}>
+                  {listing.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-ink" htmlFor="type">
+              Tipo
+            </label>
+            <select
+              className="mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              defaultValue={selectedType ?? ""}
+              id="type"
+              name="type"
+            >
+              <option value="">Todos</option>
+              {changeEventTypeOptions.map((type) => (
+                <option key={type} value={type}>
+                  {changeEventTypeLabels[type]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            className="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
+            type="submit"
+          >
+            Filtrar
+          </button>
+          {(selectedProjectId || selectedListingId || selectedType) ? (
+            <Link
+              className="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-accent hover:text-accent"
+              href="/cambios"
+            >
+              Limpiar
+            </Link>
+          ) : null}
+        </form>
+
+        {changes.length > 0 ? (
+          <div className="overflow-hidden rounded-2xl border border-line">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-line text-left">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Fecha
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Tipo
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Publicacion
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Detalle
+                    </th>
+                    <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line bg-white">
+                  {changes.map((change) => (
+                    <tr key={change.id}>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                        {formatDateTime(change.occurredAt)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm">
+                        <Badge>{changeEventTypeLabels[change.type]}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-700">
+                        <Link className="font-semibold text-ink hover:text-accent" href={`/publicaciones/${change.listingId}`}>
+                          {change.listing.title}
+                        </Link>
+                        <p className="mt-1 text-xs text-slate-500">{change.listing.project.name}</p>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-700">
+                        <Link className="font-semibold text-ink hover:text-accent" href={`/cambios/${change.id}`}>
+                          {change.detail}
+                        </Link>
+                        {change.comment ? (
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
+                            {change.comment}
+                          </p>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Link
+                            className="rounded-2xl border border-line px-3 py-2 font-semibold text-ink transition hover:border-accent hover:text-accent"
+                            href={`/cambios/${change.id}`}
+                          >
+                            Detalle
+                          </Link>
+                          <Link
+                            className="rounded-2xl border border-line px-3 py-2 font-semibold text-ink transition hover:border-accent hover:text-accent"
+                            href={`/cambios/${change.id}/editar`}
+                          >
+                            Editar
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-line bg-slate-50 px-4 py-6 text-sm leading-6 text-slate-600">
+            No hay cambios para este filtro. Registra el primer evento para empezar la bitacora.
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

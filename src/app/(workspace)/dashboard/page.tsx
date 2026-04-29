@@ -1,68 +1,153 @@
-import { DataTablePreview } from "@/components/ui/data-table-preview";
+import Link from "next/link";
+
+import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/ui/metric-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
+import { formatDateTime } from "@/lib/format";
+import { changeEventTypeLabels, listingStatusLabels, projectStatusLabels } from "@/lib/market-labels";
+import { getDashboardOverview } from "@/lib/market-data";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const overview = await getDashboardOverview();
+
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Panel inicial"
-        title="Dashboard operativo de arranque"
-        description="Esta pantalla resume la base tecnica ya lista para trabajar en localhost y deja visible el norte del producto: memoria operativa, explicacion probable y contexto competitivo minimo."
+        eyebrow="Panel operativo"
+        title="Dashboard con datos locales"
+        description="Resumen simple del SQLite local: proyectos activos, publicaciones cargadas, cambios recientes y ultimas acciones registradas en la bitacora."
       />
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-4">
         <MetricCard
-          label="App base"
-          value="Lista"
-          detail="Next.js, TypeScript y Tailwind ya componen la shell general del producto."
+          label="Proyectos"
+          value={overview.projectCount.toString()}
+          detail="Activos o pausados. Los archivados conservan memoria, pero no cuentan aca."
         />
         <MetricCard
-          label="Persistencia"
-          value="SQLite"
-          detail="Prisma queda preparado para guardar datos locales sin depender de infraestructura externa."
+          label="Publicaciones"
+          value={overview.listingCount.toString()}
+          detail="Publicaciones propias disponibles para cambios y snapshots metricos."
         />
         <MetricCard
-          label="Navegacion"
-          value="8 modulos"
-          detail="Las secciones principales del MVP ya existen para ordenar el crecimiento del producto."
+          label="Cambios recientes"
+          value={overview.recentChangeCount.toString()}
+          detail="Eventos registrados en los ultimos 14 dias."
+        />
+        <MetricCard
+          label="Busquedas"
+          value={overview.trackedSearchCount.toString()}
+          detail="Busquedas monitoreadas activas como contexto competitivo minimo."
         />
       </div>
 
-      <div className="grid gap-6 2xl:grid-cols-[1.3fr_0.9fr]">
+      <div className="grid gap-6 2xl:grid-cols-[1.25fr_0.9fr]">
         <SectionCard
-          eyebrow="Foco del MVP"
-          title="Lo que esta base ya deja encaminado"
-          description="El scaffold esta preparado para crecer primero sobre causalidad y memoria operativa, y despues sobre contexto competitivo y oportunidades."
+          action={
+            <Link
+              className="inline-flex rounded-2xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              href="/cambios/nuevo"
+            >
+              Registrar cambio
+            </Link>
+          }
+          eyebrow="Bitacora"
+          title="Ultimos cambios"
+          description="La app ya empieza a responder que se toco, cuando y sobre que publicacion."
         >
-          <DataTablePreview
-            columns={["Modulo", "Estado", "Siguiente paso"]}
-            rows={[
-              ["Proyectos", "Base visual lista", "CRUD inicial y relacion con publicaciones"],
-              ["Publicaciones", "Base visual lista", "Alta, edicion y vinculacion con snapshots"],
-              ["Cambios", "Base visual lista", "Registrar eventos operativos con contexto"],
-              ["Importaciones", "Base visual lista", "Subida de CSV y validacion"],
-              ["Competencia", "Base visual lista", "Snapshots manuales y busquedas monitoreadas"],
-              ["Oportunidades", "Base visual lista", "Senales simples derivadas del contexto"],
-            ]}
-          />
+          {overview.recentChanges.length > 0 ? (
+            <div className="overflow-hidden rounded-2xl border border-line">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-line text-left">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                        Fecha
+                      </th>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                        Cambio
+                      </th>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                        Publicacion
+                      </th>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                        Proyecto
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line bg-white">
+                    {overview.recentChanges.map((change) => (
+                      <tr key={change.id}>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                          {formatDateTime(change.occurredAt)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700">
+                          <div className="flex flex-col gap-2">
+                            <Badge>{changeEventTypeLabels[change.type]}</Badge>
+                            <Link className="font-semibold text-ink hover:text-accent" href={`/cambios/${change.id}`}>
+                              {change.detail}
+                            </Link>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700">
+                          <Link className="font-semibold text-ink hover:text-accent" href={`/publicaciones/${change.listingId}`}>
+                            {change.listing.title}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-700">
+                          {change.listing.project.name}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-line bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+              Todavia no hay cambios recientes. El primer registro ya habilita la bitacora real.
+            </p>
+          )}
         </SectionCard>
 
         <SectionCard
-          eyebrow="Tesis del producto"
-          title="Criterio para las siguientes iteraciones"
-          description="Si una decision no mejora la respuesta a que tocamos, que paso despues y que aprendemos, probablemente no sea prioridad."
+          eyebrow="Ultimas acciones"
+          title="Datos que ya alimentan el sistema"
+          description="Actividad reciente sin prometer analitica causal todavia."
         >
-          <div className="space-y-4 text-sm leading-7 text-slate-600">
-            <p>
-              La app no busca ser otro dashboard generico ni una suite de market intelligence.
-              Esta base ya ordena la navegacion alrededor de memoria operativa y causalidad.
-            </p>
-            <p>
-              Competencia y oportunidades entran como capas utiles, pero subordinadas al registro
-              de cambios, metrica y explicacion probable.
-            </p>
+          <div className="space-y-5">
+            <div>
+              <h3 className="text-sm font-semibold text-ink">Proyectos nuevos</h3>
+              <div className="mt-3 space-y-3">
+                {overview.recentProjects.map((project) => (
+                  <div key={project.id} className="rounded-2xl border border-line bg-slate-50 px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-ink">{project.name}</span>
+                      <Badge>{projectStatusLabels[project.status]}</Badge>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">{formatDateTime(project.createdAt)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-ink">Publicaciones nuevas</h3>
+              <div className="mt-3 space-y-3">
+                {overview.recentListings.map((listing) => (
+                  <div key={listing.id} className="rounded-2xl border border-line bg-slate-50 px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <Link className="text-sm font-semibold text-ink hover:text-accent" href={`/publicaciones/${listing.id}`}>
+                        {listing.title}
+                      </Link>
+                      <Badge>{listingStatusLabels[listing.status]}</Badge>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">{listing.project.name}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </SectionCard>
       </div>

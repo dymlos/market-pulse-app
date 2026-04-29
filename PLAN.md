@@ -1,7 +1,7 @@
 # PLAN.md
 
 ## Estado general
-Objetivo actual: dejar una base tecnica ejecutable, ordenada y lista para construir el nucleo causal sin improvisacion.
+Objetivo actual: convertir la base tecnica ejecutable en una herramienta usable para registrar proyectos, publicaciones y cambios operativos con persistencia local.
 
 ## Etapa 1 - Preparacion del repo
 Estado: completada
@@ -71,17 +71,32 @@ Resultado logrado:
 - SQLite local recreable con comandos del repo
 
 ## Etapa 4 - CRUD base
-Estado: siguiente bloque recomendado
+Estado: implementada en esta iteracion, pendiente de validacion visual manual en localhost
 
 Objetivo:
 
 - CRUD de proyectos
 - CRUD de publicaciones propias
 - carga y consulta de cambios operativos
+- dashboard con datos reales del SQLite local
+- base simple de busquedas monitoreadas y snapshots de competencia
 
 Resultado esperado:
 
 - primera experiencia usable para registrar memoria operativa
+
+Resultado logrado:
+
+- dashboard conectado a datos reales de SQLite
+- listado, alta, edicion y archivado suave de proyectos
+- listado, filtro por proyecto, alta, edicion y detalle de publicaciones
+- listado, filtros, alta, edicion y detalle de cambios operativos
+- listado, alta y detalle simple de busquedas monitoreadas
+
+Validacion:
+
+- `npm run lint` ejecutado correctamente
+- `npm run build` queda bloqueado en este entorno por `EPERM` al intentar escanear carpetas protegidas del perfil de Windows durante webpack
 
 ## Etapa 5 - Importacion CSV
 Estado: pendiente
