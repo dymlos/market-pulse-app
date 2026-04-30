@@ -203,3 +203,16 @@ export async function getTrackedSearchDetail(trackedSearchId: string) {
     },
   });
 }
+
+export async function getCsvImports(projectId?: string) {
+  return prisma.csvImport.findMany({
+    where: {
+      projectId: projectId || undefined,
+    },
+    include: {
+      project: true,
+    },
+    orderBy: { importedAt: "desc" },
+    take: 15,
+  });
+}

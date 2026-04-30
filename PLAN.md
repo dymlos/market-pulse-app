@@ -99,17 +99,45 @@ Validacion:
 - `npm run build` queda bloqueado en este entorno por `EPERM` al intentar escanear carpetas protegidas del perfil de Windows durante webpack
 
 ## Etapa 5 - Importacion CSV
-Estado: pendiente
+Estado: implementada en esta iteracion, pendiente de revision visual manual
 
 Objetivo:
 
 - importar snapshots metricos
-- importar eventos de cambio si aplica
+- registrar imports CSV locales
 - validar formatos y errores comunes
 
 Resultado esperado:
 
 - flujo local simple para cargar datos reales sin APIs externas
+
+Alcance de la iteracion actual:
+
+- importar metricas historicas como `ListingMetricSnapshot`
+- previsualizar filas del CSV
+- mapear columnas flexibles a campos internos
+- validar fechas, numeros y vinculacion con publicaciones existentes
+- registrar validas, invalidas y omitidas en `CsvImport.summary`
+- dejar eventos de cambio CSV fuera de alcance por ahora
+
+Resultado logrado:
+
+- parser CSV local con deteccion de separador `,`, `;` o tab
+- mapping sugerido por aliases de columnas frecuentes
+- validacion de fechas, enteros, decimales y conversion con coma, punto o porcentaje
+- vinculacion automatica por `listingId`, `externalId`, `sku`, titulo o referencia generica
+- resolucion manual minima y opcion de crear publicaciones faltantes
+- persistencia por upsert en `ListingMetricSnapshot` usando `listingId + snapshotDate`
+- registro de `CsvImport` con estado `PROCESSED`, `PARTIAL` o `FAILED`
+- samples CSV validos, con headers alternativos y con filas invalidas
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npm test`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `npm run build`: bloqueado por `EPERM` de Windows al escanear `C:\Users\user\Configuracion local`, mismo problema de entorno ya observado
+- verificacion de persistencia: flujo validado por API durante la iteracion; al cierre, SQLite quedo bloqueado por `disk I/O error` incluso en una base aislada, por lo que conviene reiniciar procesos dev antes de una nueva prueba manual
 
 ## Etapa 6 - Timeline causal
 Estado: pendiente

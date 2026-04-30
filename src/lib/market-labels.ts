@@ -1,5 +1,7 @@
 import {
   ChangeEventType,
+  CsvImportStatus,
+  CsvImportType,
   ListingStatus,
   ProjectStatus,
   SearchSnapshotSource,
@@ -40,6 +42,22 @@ export const searchSnapshotSourceLabels: Record<SearchSnapshotSource, string> = 
   OTHER: "Otro",
 };
 
+export const csvImportStatusLabels: Record<CsvImportStatus, string> = {
+  PENDING: "Pendiente",
+  PROCESSED: "Procesada",
+  PARTIAL: "Parcial",
+  FAILED: "Fallida",
+};
+
+export const csvImportTypeLabels: Record<CsvImportType, string> = {
+  LISTING_METRICS: "Metricas de publicaciones",
+  CHANGE_EVENTS: "Cambios",
+  LISTINGS: "Publicaciones",
+  SEARCH_RESULTS: "Resultados de busqueda",
+  COMPETITORS: "Competidores",
+  OTHER: "Otro",
+};
+
 export const projectStatusOptions = Object.values(ProjectStatus);
 export const listingStatusOptions = Object.values(ListingStatus);
 export const changeEventTypeOptions = Object.values(ChangeEventType);
@@ -66,4 +84,16 @@ export function listingStatusTone(status: ListingStatus) {
   }
 
   return "muted" as const;
+}
+
+export function csvImportStatusTone(status: CsvImportStatus) {
+  if (status === CsvImportStatus.PROCESSED) {
+    return "success" as const;
+  }
+
+  if (status === CsvImportStatus.PARTIAL || status === CsvImportStatus.PENDING) {
+    return "warning" as const;
+  }
+
+  return "danger" as const;
 }

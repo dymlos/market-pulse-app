@@ -1,3 +1,4 @@
-project_slug,listing_external_id,snapshot_date,visits,orders,revenue,conversion_rate,stock,price,notes
-demo-proyecto,MLA123456789,2026-04-17,420,12,311988,0.0286,34,25999,baseline previa a cambios
-demo-proyecto,MLA123456789,2026-04-20,515,18,449982,0.0350,22,24999,mejora posterior a ajuste de precio y titulo
+listing_external_id,snapshot_date,visits,orders,revenue,conversion_rate,stock,price,ad_spend,notes
+MLA-TERMICO-001,2026-04-21,184,17,662983,0.0924,39,38999,8200,import valido por ID externo
+MLA-COOLER-002,2026-04-21,88,5,339950,5.68%,16,67990,3100,conversion con porcentaje
+MLA-BACKPACK-003,2026-04-21,81,3,277470,0.0370,10,92490,1900,conversion en ratio convertida a porcentaje

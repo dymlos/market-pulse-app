@@ -1,0 +1,4 @@
+listing_external_id,snapshot_date,visits,orders,revenue,conversion_rate,stock,price,notes
+MLA-TERMICO-001,2026-04-23,190,18,701982,9.47,31,38999,fila valida
+MLA-NO-EXISTE,2026-04-23,75,2,130000,2.66,8,65000,publicacion inexistente para omitir o crear
+MLA-COOLER-002,fecha-rara,abc,3,203970,4.1,13,67990,fecha y visitas invalidas

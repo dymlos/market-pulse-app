@@ -7,7 +7,7 @@ La tesis del producto sigue siendo la misma:
 > **No construir otra suite generica de market intelligence, sino una bitacora causal operativa que registre cambios, mida impacto y explique que probablemente paso, usando competencia y oportunidades como contexto.**
 
 ## Estado actual del repositorio
-Esta iteracion deja funcionando la **app base en localhost** con:
+El repositorio ya tiene una base local-first en funcionamiento con:
 
 - `Next.js` + `TypeScript`
 - `Tailwind CSS`
@@ -17,8 +17,10 @@ Esta iteracion deja funcionando la **app base en localhost** con:
 - seed demo realista para explorar el dominio
 - layout general con sidebar, header y contenedor principal
 - navegacion inicial para los modulos del MVP
+- CRUD operativo inicial para proyectos, publicaciones y cambios
+- importacion CSV de metricas historicas como snapshots reales
 
-Todavia no se implementa el CRUD completo ni la logica profunda del negocio. El objetivo de este bloque fue dejar una base clara, ejecutable y preparada para crecer sin sobreconstruccion.
+Todavia no se implementa timeline causal ni explicacion profunda. La base queda preparada para cargar datos reales y construir la vista antes/despues por publicacion.
 
 ## Stack elegido
 - `Next.js` con App Router
@@ -126,10 +128,45 @@ Si venis de una base anterior del scaffold sin historial de migraciones, convien
 - `npm run build`
 - `npm run start`
 - `npm run lint`
+- `npm test`
 - `npm run db:generate`
 - `npm run db:push`
 - `npm run db:reset`
 - `npm run db:seed`
+
+## Importacion CSV de metricas
+La pantalla `Importaciones` permite cargar snapshots historicos de publicaciones desde CSV y guardarlos como `ListingMetricSnapshot`.
+
+Flujo soportado:
+
+1. Seleccionar proyecto.
+2. Subir CSV.
+3. Previsualizar filas.
+4. Revisar o ajustar mapping de columnas.
+5. Resolver publicaciones no encontradas o permitir crearlas.
+6. Importar snapshots validos.
+7. Registrar el resultado en `CsvImport`.
+
+Campos soportados:
+
+- fecha
+- publicacion por ID interno, ID externo, SKU, titulo o referencia generica
+- visitas
+- ventas en unidades
+- conversion
+- facturacion
+- stock
+- precio
+- gasto ads
+- notas
+
+El parser acepta separadores `,`, `;` y tab, comillas CSV, headers alternativos, fechas ISO o `dd/mm/yyyy`, numeros con coma o punto y conversion en ratio o porcentaje.
+
+Samples utiles:
+
+- `samples/csv/metric-snapshots.sample.csv`
+- `samples/csv/metric-snapshots-alternative-headers.sample.csv`
+- `samples/csv/metric-snapshots-invalid.sample.csv`
 
 ## Persistencia local
 La base de datos operativa se crea en:
@@ -166,11 +203,9 @@ El seed actual crea:
 - 2 senales de oportunidad
 
 ## Que sigue despues de este bloque
-El siguiente bloque recomendado es construir el **CRUD base del nucleo causal**:
+El siguiente bloque recomendado es construir el **timeline simple por publicacion**:
 
-- CRUD de proyectos
-- CRUD de publicaciones
-- registro de cambios operativos
-- consulta de snapshots metricos y timeline
-
-Despues de eso ya conviene pasar a importacion CSV real y vista causal antes/despues.
+- listar cambios y snapshots en orden cronologico
+- comparar ventanas antes/despues de un cambio
+- mostrar copy prudente de impacto probable
+- dejar la base lista para insights heuristicos posteriores

@@ -36,6 +36,7 @@ Responsable de:
 - navegacion principal
 - vistas iniciales por modulo
 - componentes visuales reutilizables
+- UI minima de importacion CSV para preview, mapping y resultado
 
 Ubicacion:
 
@@ -48,6 +49,7 @@ Responsable de:
 - configuracion de modulos
 - metadata de navegacion
 - decisiones de copy y foco de producto en la UI base
+- parseo, mapping y validacion de CSV de metricas
 
 Ubicacion:
 
@@ -88,6 +90,18 @@ Ubicacion:
 - `CsvImport`: registro simple de importaciones CSV con tipo, archivo, estado y conteo de filas.
 - `Insight`: lectura heuristica o futura salida de IA vinculable a proyecto y opcionalmente a publicacion o busqueda.
 - `OpportunitySignal`: senal accionable vinculable a proyecto y opcionalmente a publicacion o busqueda.
+
+## Importacion CSV de metricas
+La importacion de metricas se mantiene dentro del monolito local-first:
+
+- endpoints locales en `src/app/api/importaciones/metricas/`
+- parser y mapping en `src/lib/csv/`
+- persistencia via Prisma en SQLite
+- UI minima en `src/components/imports/`
+
+El flujo no usa APIs externas ni scraping. Cada fila valida termina asociada a un `Listing` existente o, si el usuario lo habilita, a un `Listing` creado durante la importacion. Los snapshots se guardan con upsert sobre `listingId + snapshotDate` para que reimportar un archivo corrija valores sin duplicar fechas.
+
+Las filas invalidas u omitidas no cortan toda la carga. `CsvImport` guarda `totalRows`, `validRows`, `invalidRows`, `status` y un `summary` JSON con `skippedRows`, `createdListings` e issues compactos.
 
 ## Relaciones clave
 - `Project -> Listing` es la relacion principal del MVP.
