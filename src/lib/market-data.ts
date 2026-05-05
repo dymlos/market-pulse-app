@@ -107,11 +107,15 @@ export async function getListingDetail(listingId: string) {
       project: true,
       changeEvents: {
         orderBy: { occurredAt: "desc" },
-        take: 6,
+        take: 60,
       },
       metricSnapshots: {
         orderBy: { snapshotDate: "desc" },
-        take: 6,
+        take: 120,
+      },
+      insights: {
+        orderBy: { recordedAt: "desc" },
+        take: 8,
       },
     },
   });

@@ -168,7 +168,7 @@ Validacion:
 - verificacion de persistencia: flujo validado por API durante la iteracion; al cierre, SQLite quedo bloqueado por `disk I/O error` incluso en una base aislada, por lo que conviene reiniciar procesos dev antes de una nueva prueba manual
 
 ## Etapa 6 - Timeline causal
-Estado: pendiente
+Estado: en progreso en esta iteracion
 
 Objetivo:
 
@@ -179,6 +179,15 @@ Objetivo:
 Resultado esperado:
 
 - nucleo del MVP funcionando
+
+Alcance de la iteracion actual:
+
+- mejorar el detalle de publicacion como entrada al timeline causal
+- combinar `ChangeEvent` y `ListingMetricSnapshot` en una secuencia cronologica simple
+- mostrar resumen operativo de snapshots, cambios, ultima fecha con datos y variaciones basicas
+- generar lecturas heuristicas en tiempo de consulta con categorias prudentes: probable, posible, mixta y no concluyente
+- mostrar insights guardados del modelo `Insight` como memoria complementaria
+- mantener la UI minima, sin graficos ni nuevas dependencias
 
 ## Etapa 7 - Competencia
 Estado: pendiente

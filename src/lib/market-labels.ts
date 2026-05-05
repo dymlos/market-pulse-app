@@ -2,6 +2,9 @@ import {
   ChangeEventType,
   CsvImportStatus,
   CsvImportType,
+  InsightConfidence,
+  InsightStatus,
+  InsightType,
   ListingStatus,
   ProjectStatus,
   SearchSnapshotSource,
@@ -58,6 +61,29 @@ export const csvImportTypeLabels: Record<CsvImportType, string> = {
   OTHER: "Otro",
 };
 
+export const insightTypeLabels: Record<InsightType, string> = {
+  CHANGE_IMPACT: "Impacto de cambio",
+  ATTRIBUTION_MIXED: "Atribucion mixta",
+  COMPETITOR_CONTEXT: "Contexto competitivo",
+  STOCK_ALERT: "Alerta de stock",
+  VISIBILITY_ALERT: "Alerta de visibilidad",
+  LEARNING_NOTE: "Aprendizaje",
+  OTHER: "Otro",
+};
+
+export const insightConfidenceLabels: Record<InsightConfidence, string> = {
+  LOW: "bajo",
+  MEDIUM: "medio",
+  HIGH: "alto",
+};
+
+export const insightStatusLabels: Record<InsightStatus, string> = {
+  NEW: "Nueva",
+  REVIEWED: "Revisada",
+  DISMISSED: "Descartada",
+  ARCHIVED: "Archivada",
+};
+
 export const projectStatusOptions = Object.values(ProjectStatus);
 export const listingStatusOptions = Object.values(ListingStatus);
 export const changeEventTypeOptions = Object.values(ChangeEventType);
@@ -96,4 +122,16 @@ export function csvImportStatusTone(status: CsvImportStatus) {
   }
 
   return "danger" as const;
+}
+
+export function insightConfidenceTone(confidence: InsightConfidence | "LOW" | "MEDIUM" | "HIGH") {
+  if (confidence === "HIGH") {
+    return "success" as const;
+  }
+
+  if (confidence === "MEDIUM") {
+    return "warning" as const;
+  }
+
+  return "muted" as const;
 }
