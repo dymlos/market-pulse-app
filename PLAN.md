@@ -1,7 +1,7 @@
 # PLAN.md
 
 ## Estado general
-Objetivo actual: convertir la base tecnica ejecutable en una herramienta usable para registrar proyectos, publicaciones y cambios operativos con persistencia local.
+Objetivo actual: ampliar el contexto competitivo minimo sin desviar el nucleo causal: busquedas monitoreadas, snapshots manuales comparables, resultados observados y share of shelf simple.
 
 ## Ajuste visual transversal - Paleta oscura
 Estado: completado en esta iteracion
@@ -190,7 +190,7 @@ Alcance de la iteracion actual:
 - mantener la UI minima, sin graficos ni nuevas dependencias
 
 ## Etapa 7 - Competencia
-Estado: pendiente
+Estado: implementada en esta iteracion, pendiente de revision visual manual
 
 Objetivo:
 
@@ -201,6 +201,44 @@ Objetivo:
 Resultado esperado:
 
 - contexto competitivo minimo sin desviar el foco principal
+
+Alcance de la iteracion actual:
+
+- listar, crear y editar busquedas monitoreadas
+- crear snapshots manuales por fecha
+- cargar resultados observados de forma manual
+- vincular resultados a publicaciones propias o competidores
+- listar y crear competidores de forma simple
+- comparar dos snapshots de una misma busqueda
+- mostrar presencia propia, presencia por competidor y cambios basicos de precio
+
+Restricciones:
+
+- sin scraping
+- sin IA
+- sin automatizaciones externas
+- sin dashboards competitivos pesados
+
+Resultado logrado:
+
+- flujo de busquedas monitoreadas con listado, alta, edicion y detalle
+- flujo de snapshots manuales por busqueda
+- detalle de snapshot con carga manual de resultados observados
+- vinculacion opcional de resultados a `Listing` o `Competitor`
+- alta y listado simple de competidores
+- comparacion entre dos snapshots de una misma busqueda
+- share of shelf simple: apariciones propias, apariciones por competidor, top 5/top 10 y entradas/salidas
+- helper puro de comparacion con validacion automatizada
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npm test`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- validacion Prisma temporal: correcta para crear busqueda, dos snapshots y resultados observados
+- app levantada en `http://localhost:3000` contra base temporal de validacion: rutas de competencia respondieron 200
+- `npm run build`: bloqueado por `EPERM` de Windows al escanear `C:\Users\user\Configuracion local`, igual que en iteraciones previas
+- base local por defecto `data/market-pulse.local.db`: sigue presentando `disk I/O error` de SQLite, problema ya observado en logs previos
 
 ## Etapa 8 - Oportunidades
 Estado: pendiente

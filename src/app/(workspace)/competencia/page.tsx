@@ -1,11 +1,13 @@
 import Link from "next/link";
 
+import { CompetitorForm } from "@/components/forms/competitor-form";
 import { Badge } from "@/components/ui/badge";
 import { FormMessage } from "@/components/ui/form-message";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { firstParam, formatDateTime, type SearchParamsInput } from "@/lib/format";
-import { getProjectOptions, getTrackedSearches } from "@/lib/market-data";
+import { createCompetitor } from "@/lib/market-actions";
+import { getCompetitors, getProjectOptions, getTrackedSearches } from "@/lib/market-data";
 
 type CompetenciaPageProps = {
   searchParams?: Promise<SearchParamsInput>;
@@ -16,14 +18,16 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
   const selectedProjectId = firstParam(params.projectId) || "";
   const error = firstParam(params.error);
 
-  const [projects, trackedSearches] = await Promise.all([
+  const [projects, trackedSearches, competitors] = await Promise.all([
     getProjectOptions(),
     getTrackedSearches(selectedProjectId || undefined),
+    getCompetitors(selectedProjectId || undefined),
   ]);
 
   const createHref = selectedProjectId
     ? `/competencia/nueva?projectId=${selectedProjectId}`
     : "/competencia/nueva";
+  const currentHref = selectedProjectId ? `/competencia?projectId=${selectedProjectId}` : "/competencia";
 
   return (
     <div className="space-y-6">
@@ -152,6 +156,70 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
             Todavia no hay busquedas monitoreadas para este filtro.
           </div>
         )}
+      </SectionCard>
+
+      <SectionCard
+        title="Competidores"
+        description="Registro simple para reutilizar nombres al cargar resultados observados. No es un perfil competitivo avanzado."
+      >
+        <CompetitorForm
+          action={createCompetitor}
+          projects={projects}
+          returnTo={currentHref}
+          selectedProjectId={selectedProjectId}
+        />
+
+        <div className="mt-6">
+          {competitors.length > 0 ? (
+            <div className="overflow-hidden rounded-2xl border border-line">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-line text-left">
+                  <thead className="bg-panel-raised">
+                    <tr>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                        Competidor
+                      </th>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                        Proyecto
+                      </th>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                        Seller
+                      </th>
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                        Resultados vinculados
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line bg-panel">
+                    {competitors.map((competitor) => (
+                      <tr key={competitor.id}>
+                        <td className="px-4 py-3 text-sm">
+                          <div className="font-semibold text-ink">{competitor.name}</div>
+                          {competitor.notes ? (
+                            <p className="mt-1 text-xs leading-5 text-muted">{competitor.notes}</p>
+                          ) : null}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
+                          {competitor.project.name}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
+                          {competitor.sellerHandle ?? competitor.marketplaceSellerId ?? "Sin dato"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
+                          {competitor._count.searchResultItems}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-line bg-panel-raised px-4 py-6 text-sm leading-6 text-muted">
+              Todavia no hay competidores para este filtro.
+            </div>
+          )}
+        </div>
       </SectionCard>
     </div>
   );

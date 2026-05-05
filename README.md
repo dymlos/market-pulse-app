@@ -19,8 +19,10 @@ El repositorio ya tiene una base local-first en funcionamiento con:
 - navegacion inicial para los modulos del MVP
 - CRUD operativo inicial para proyectos, publicaciones y cambios
 - importacion CSV de metricas historicas como snapshots reales
+- primera version del timeline causal por publicacion
+- competencia acotada con busquedas monitoreadas, snapshots manuales, resultados observados y comparacion simple
 
-Todavia no se implementa timeline causal ni explicacion profunda. La base queda preparada para cargar datos reales y construir la vista antes/despues por publicacion.
+La base queda preparada para cargar datos reales y cruzar mas adelante contexto competitivo con el timeline causal, sin prometer causalidad absoluta.
 
 ## Stack elegido
 - `Next.js` con App Router
@@ -168,6 +170,27 @@ Samples utiles:
 - `samples/csv/metric-snapshots-alternative-headers.sample.csv`
 - `samples/csv/metric-snapshots-invalid.sample.csv`
 
+## Competencia acotada
+La pantalla `Competencia` permite trabajar con contexto competitivo manual y comparable:
+
+1. Crear una busqueda monitoreada por proyecto.
+2. Editar nombre, query, notas y estado activo/inactivo.
+3. Crear snapshots manuales por fecha.
+4. Cargar resultados observados dentro de cada snapshot.
+5. Vincular un resultado a una publicacion propia o a un competidor conocido.
+6. Crear competidores simples desde la seccion de competencia o durante la carga de resultados.
+7. Comparar dos snapshots de una misma busqueda.
+
+El share of shelf de esta etapa es deliberadamente simple:
+
+- apariciones propias cargadas
+- apariciones por competidor o seller visible
+- presencia propia en top 5 y top 10
+- competidores que entran o desaparecen entre dos snapshots
+- cambios de precio observados cuando se puede comparar el mismo resultado
+
+No hay scraping, automatizaciones externas, IA ni inteligencia competitiva masiva. El modulo existe como contexto operativo para explicar mejor que pudo haber pasado.
+
 ## Persistencia local
 La base de datos operativa se crea en:
 
@@ -203,9 +226,8 @@ El seed actual crea:
 - 2 senales de oportunidad
 
 ## Que sigue despues de este bloque
-El siguiente bloque recomendado es construir el **timeline simple por publicacion**:
+El siguiente bloque recomendado es decidir entre:
 
-- listar cambios y snapshots en orden cronologico
-- comparar ventanas antes/despues de un cambio
-- mostrar copy prudente de impacto probable
-- dejar la base lista para insights heuristicos posteriores
+- conectar este contexto competitivo al timeline causal de forma prudente
+- avanzar con oportunidades operativas simples derivadas de snapshots cargados
+- mejorar validaciones/manualidad de carga sin abrir scraping ni automatizaciones externas

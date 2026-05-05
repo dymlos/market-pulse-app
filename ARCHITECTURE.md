@@ -18,15 +18,16 @@ Preparar una app web real que corra primero en una sola PC, sin hosting obligato
 - `SQLite`
 
 ## Decision de esta iteracion
-Se completo el modelo de datos de etapa 1 con persistencia versionada para dejar:
+Se agrego una primera capa usable de competencia acotada sin cambiar el modelo de datos:
 
-- entorno ejecutable en localhost
-- shell de navegacion base
-- esquema Prisma alineado al MVP causal
-- migracion inicial versionada
-- seed demo local para explorar el dominio
+- busquedas monitoreadas editables
+- snapshots manuales por fecha
+- resultados observados cargados manualmente
+- competidores simples reutilizables
+- comparacion entre dos snapshots de una misma busqueda
+- share of shelf simple basado en resultados cargados
 
-Todavia no se implementa logica causal profunda ni CRUD completo. Este bloque existe para dejar una fundacion limpia y util.
+La decision se mantiene alineada con el producto: competencia es contexto operativo para la bitacora causal, no una suite de market intelligence.
 
 ## Capas actuales
 ### 1. Presentacion
@@ -50,6 +51,8 @@ Responsable de:
 - metadata de navegacion
 - decisiones de copy y foco de producto en la UI base
 - parseo, mapping y validacion de CSV de metricas
+- comparacion simple entre snapshots de busqueda
+- calculo de presencia propia, presencia por competidor y entradas/salidas entre snapshots
 
 Ubicacion:
 
@@ -102,6 +105,27 @@ La importacion de metricas se mantiene dentro del monolito local-first:
 El flujo no usa APIs externas ni scraping. Cada fila valida termina asociada a un `Listing` existente o, si el usuario lo habilita, a un `Listing` creado durante la importacion. Los snapshots se guardan con upsert sobre `listingId + snapshotDate` para que reimportar un archivo corrija valores sin duplicar fechas.
 
 Las filas invalidas u omitidas no cortan toda la carga. `CsvImport` guarda `totalRows`, `validRows`, `invalidRows`, `status` y un `summary` JSON con `skippedRows`, `createdListings` e issues compactos.
+
+## Competencia acotada
+La capa competitiva usa las entidades existentes:
+
+- `TrackedSearch`: busqueda monitoreada editable por proyecto.
+- `SearchSnapshot`: captura manual o CSV de una busqueda en una fecha.
+- `SearchResultItem`: resultado observado con posicion, precio, vendedor, flags visibles y vinculos opcionales.
+- `Competitor`: competidor simple del proyecto para evitar duplicar nombres al cargar resultados.
+
+Las mutaciones viven en `src/lib/market-actions.ts` y las lecturas en `src/lib/market-data.ts`. La comparacion pura vive en `src/lib/search-snapshot-comparison.ts` para mantenerla testeable sin Prisma ni UI.
+
+En esta etapa, share of shelf significa conteos visibles sobre lo cargado manualmente:
+
+- total de resultados cargados
+- apariciones propias
+- apariciones por competidor o seller visible
+- presencia propia en top 5 y top 10
+- competidores nuevos o desaparecidos entre snapshots
+- cambios simples de precio cuando el resultado se puede matchear por publicacion propia, ID externo, competidor+titulo o vendedor+titulo
+
+No se implementa scraping, crawling, automatizacion externa, share of shelf ponderado ni integracion profunda con el timeline causal.
 
 ## Relaciones clave
 - `Project -> Listing` es la relacion principal del MVP.

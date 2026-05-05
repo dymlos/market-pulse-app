@@ -49,6 +49,10 @@ const {
   buildListingTimeline,
   generateListingHeuristicInsights,
 } = loadTypeScriptModule("src/lib/causal-timeline.ts");
+const {
+  buildShelfPresence,
+  compareSearchSnapshots,
+} = loadTypeScriptModule("src/lib/search-snapshot-comparison.ts");
 
 test("parseCsv supports quoted semicolon CSV rows", () => {
   const parsed = parseCsv(
@@ -232,3 +236,103 @@ test("generateListingHeuristicInsights stays inconclusive without posterior snap
   assert.equal(insights[0].category, "no concluyente");
   assert.equal(insights[0].confidence, "LOW");
 });
+
+test("buildShelfPresence counts own and competitor visibility", () => {
+  const presence = buildShelfPresence({
+    id: "snapshot-a",
+    capturedAt: new Date("2026-04-20T12:00:00.000Z"),
+    results: [
+      makeSearchResult({ id: "1", position: 1, competitorId: "north", seller: "Outdoor North" }),
+      makeSearchResult({ id: "2", position: 2, isOwnListing: true, ownListingId: "own-1" }),
+      makeSearchResult({ id: "3", position: 8, competitorId: "north", seller: "Outdoor North" }),
+      makeSearchResult({ id: "4", position: 11, seller: "Pampa Gear" }),
+    ],
+  });
+
+  assert.equal(presence.totalResults, 4);
+  assert.equal(presence.ownCount, 1);
+  assert.equal(presence.competitorCount, 3);
+  assert.equal(presence.ownPresentTop5, true);
+  assert.equal(presence.ownPresentTop10, true);
+  assert.equal(presence.competitorAppearances[0].label, "Outdoor North");
+  assert.equal(presence.competitorAppearances[0].count, 2);
+});
+
+test("compareSearchSnapshots finds new competitors and price changes", () => {
+  const before = {
+    id: "snapshot-before",
+    capturedAt: new Date("2026-04-20T12:00:00.000Z"),
+    results: [
+      makeSearchResult({
+        id: "before-1",
+        position: 1,
+        competitorId: "north",
+        externalListingId: "MLA-NORTH-1",
+        seller: "Outdoor North",
+        price: 40000,
+      }),
+      makeSearchResult({
+        id: "before-2",
+        position: 4,
+        isOwnListing: true,
+        ownListingId: "own-1",
+        price: 39000,
+      }),
+    ],
+  };
+  const after = {
+    id: "snapshot-after",
+    capturedAt: new Date("2026-04-27T12:00:00.000Z"),
+    results: [
+      makeSearchResult({
+        id: "after-1",
+        position: 1,
+        competitorId: "north",
+        externalListingId: "MLA-NORTH-1",
+        seller: "Outdoor North",
+        price: 42000,
+      }),
+      makeSearchResult({
+        id: "after-2",
+        position: 2,
+        competitorId: "ruta",
+        seller: "Ruta Camping",
+        price: 41000,
+      }),
+    ],
+  };
+
+  const comparison = compareSearchSnapshots(before, after);
+
+  assert.equal(comparison.before.ownPresentTop5, true);
+  assert.equal(comparison.after.ownPresentTop5, false);
+  assert.equal(comparison.newCompetitors.length, 1);
+  assert.equal(comparison.newCompetitors[0].label, "Ruta Camping");
+  assert.equal(comparison.priceChanges.length, 1);
+  assert.equal(comparison.priceChanges[0].absoluteDelta, 2000);
+});
+
+function makeSearchResult({
+  id,
+  position,
+  isOwnListing = false,
+  ownListingId = null,
+  competitorId = null,
+  externalListingId = null,
+  seller = null,
+  price = null,
+}) {
+  return {
+    id,
+    position,
+    observedTitle: `${seller ?? "Publicacion propia"} ejemplo`,
+    observedPrice: price,
+    observedSellerName: seller,
+    isOwnListing,
+    competitorId,
+    ownListingId,
+    externalListingId,
+    competitor: competitorId && seller ? { id: competitorId, name: seller } : null,
+    ownListing: ownListingId ? { id: ownListingId, title: "Publicacion propia" } : null,
+  };
+}

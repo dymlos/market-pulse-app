@@ -1,5 +1,6 @@
 import { ChangeEventType, ProjectStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { compareSearchSnapshots } from "@/lib/search-snapshot-comparison";
 
 export async function getDashboardOverview() {
   const recentSince = new Date();
@@ -205,6 +206,99 @@ export async function getTrackedSearchDetail(trackedSearchId: string) {
         orderBy: { capturedAt: "desc" },
       },
     },
+  });
+}
+
+export async function getTrackedSearchForEdit(trackedSearchId: string) {
+  return prisma.trackedSearch.findUnique({
+    where: { id: trackedSearchId },
+  });
+}
+
+export async function getTrackedSearchComparison(
+  trackedSearchId: string,
+  beforeSnapshotId?: string,
+  afterSnapshotId?: string,
+) {
+  const snapshots = await prisma.searchSnapshot.findMany({
+    where: { trackedSearchId },
+    include: {
+      results: {
+        include: {
+          competitor: true,
+          ownListing: true,
+        },
+        orderBy: { position: "asc" },
+      },
+    },
+    orderBy: { capturedAt: "desc" },
+  });
+
+  const afterSnapshot =
+    snapshots.find((snapshot) => snapshot.id === afterSnapshotId) ?? snapshots[0] ?? null;
+  const beforeSnapshot =
+    snapshots.find((snapshot) => snapshot.id === beforeSnapshotId) ??
+    snapshots.find((snapshot) => snapshot.id !== afterSnapshot?.id) ??
+    null;
+
+  if (!beforeSnapshot || !afterSnapshot || beforeSnapshot.id === afterSnapshot.id) {
+    return {
+      snapshots,
+      beforeSnapshot,
+      afterSnapshot,
+      comparison: null,
+    };
+  }
+
+  return {
+    snapshots,
+    beforeSnapshot,
+    afterSnapshot,
+    comparison: compareSearchSnapshots(beforeSnapshot, afterSnapshot),
+  };
+}
+
+export async function getSearchSnapshotDetail(snapshotId: string) {
+  return prisma.searchSnapshot.findUnique({
+    where: { id: snapshotId },
+    include: {
+      trackedSearch: {
+        include: {
+          project: true,
+        },
+      },
+      results: {
+        include: {
+          competitor: true,
+          ownListing: true,
+        },
+        orderBy: { position: "asc" },
+      },
+    },
+  });
+}
+
+export async function getCompetitors(projectId?: string) {
+  return prisma.competitor.findMany({
+    where: {
+      projectId: projectId || undefined,
+    },
+    include: {
+      project: true,
+      _count: {
+        select: {
+          searchResultItems: true,
+        },
+      },
+    },
+    orderBy: [{ project: { name: "asc" } }, { name: "asc" }],
+  });
+}
+
+export async function getCompetitorOptions(projectId: string) {
+  return prisma.competitor.findMany({
+    where: { projectId },
+    orderBy: { name: "asc" },
   });
 }
 

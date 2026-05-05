@@ -7,6 +7,15 @@ type TrackedSearchFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   projects: ProjectOption[];
   selectedProjectId?: string;
+  trackedSearch?: {
+    id: string;
+    projectId: string;
+    name: string;
+    query: string;
+    marketplace: string;
+    isActive: boolean;
+    notes: string | null;
+  };
 };
 
 const inputClass =
@@ -17,11 +26,16 @@ export function TrackedSearchForm({
   action,
   projects,
   selectedProjectId,
+  trackedSearch,
 }: TrackedSearchFormProps) {
-  const defaultProjectId = selectedProjectId ?? projects[0]?.id ?? "";
+  const defaultProjectId = trackedSearch?.projectId ?? selectedProjectId ?? projects[0]?.id ?? "";
 
   return (
     <form action={action} className="space-y-5">
+      {trackedSearch ? (
+        <input name="trackedSearchId" type="hidden" value={trackedSearch.id} />
+      ) : null}
+
       <div>
         <label className={labelClass} htmlFor="projectId">
           Proyecto
@@ -49,6 +63,7 @@ export function TrackedSearchForm({
           </label>
           <input
             className={inputClass}
+            defaultValue={trackedSearch?.name}
             id="name"
             name="name"
             placeholder="Mates termicos 1 litro"
@@ -62,6 +77,7 @@ export function TrackedSearchForm({
           </label>
           <input
             className={inputClass}
+            defaultValue={trackedSearch?.query}
             id="query"
             name="query"
             placeholder="mate termico acero inoxidable 1 litro"
@@ -70,8 +86,34 @@ export function TrackedSearchForm({
         </div>
       </div>
 
-      <input name="marketplace" type="hidden" value="mercado-libre" />
-      <input name="isActive" type="hidden" value="true" />
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label className={labelClass} htmlFor="marketplace">
+            Marketplace
+          </label>
+          <input
+            className={inputClass}
+            defaultValue={trackedSearch?.marketplace ?? "mercado-libre"}
+            id="marketplace"
+            name="marketplace"
+          />
+        </div>
+
+        <div>
+          <label className={labelClass} htmlFor="isActive">
+            Estado
+          </label>
+          <select
+            className={inputClass}
+            defaultValue={trackedSearch?.isActive === false ? "false" : "true"}
+            id="isActive"
+            name="isActive"
+          >
+            <option value="true">Activa</option>
+            <option value="false">Inactiva</option>
+          </select>
+        </div>
+      </div>
 
       <div>
         <label className={labelClass} htmlFor="notes">
@@ -79,6 +121,7 @@ export function TrackedSearchForm({
         </label>
         <textarea
           className={`${inputClass} min-h-28`}
+          defaultValue={trackedSearch?.notes ?? ""}
           id="notes"
           name="notes"
           placeholder="Por que se monitorea esta busqueda y que publicaciones propias conviene observar."
@@ -90,7 +133,7 @@ export function TrackedSearchForm({
         disabled={projects.length === 0}
         type="submit"
       >
-        Crear busqueda
+        {trackedSearch ? "Guardar busqueda" : "Crear busqueda"}
       </button>
     </form>
   );
