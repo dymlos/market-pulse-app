@@ -38,7 +38,7 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
       <SectionCard
         action={
           <Link
-            className="inline-flex rounded-2xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex rounded-2xl bg-accent px-4 py-2 text-sm font-semibold text-shell shadow-sm transition hover:bg-accent/90"
             href={createHref}
           >
             Nueva busqueda
@@ -47,13 +47,13 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
         title="Busquedas monitoreadas"
         description="Lista de queries criticas que despues podran aportar contexto al timeline causal."
       >
-        <form className="mb-5 flex flex-col gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:flex-row md:items-end">
+        <form className="mb-5 flex flex-col gap-3 rounded-2xl border border-line bg-panel-raised p-4 md:flex-row md:items-end">
           <div className="flex-1">
             <label className="text-sm font-semibold text-ink" htmlFor="projectId">
               Proyecto
             </label>
             <select
-              className="mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              className="mt-2 w-full rounded-2xl border border-line bg-panel px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
               defaultValue={selectedProjectId}
               id="projectId"
               name="projectId"
@@ -67,14 +67,14 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
             </select>
           </div>
           <button
-            className="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
+            className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
             type="submit"
           >
             Filtrar
           </button>
           {selectedProjectId ? (
             <Link
-              className="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-accent hover:text-accent"
+              className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm font-semibold text-muted transition hover:border-accent hover:text-accent"
               href="/competencia"
             >
               Limpiar
@@ -86,38 +86,38 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
           <div className="overflow-hidden rounded-2xl border border-line">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-line text-left">
-                <thead className="bg-slate-50">
+                <thead className="bg-panel-raised">
                   <tr>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Busqueda
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Proyecto
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Estado
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Snapshots
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Ultimo snapshot
                     </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Acciones
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line bg-white">
+                <tbody className="divide-y divide-line bg-panel">
                   {trackedSearches.map((trackedSearch) => (
                     <tr key={trackedSearch.id}>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-ink">
                         <Link className="font-semibold text-ink hover:text-accent" href={`/competencia/${trackedSearch.id}`}>
                           {trackedSearch.name}
                         </Link>
-                        <p className="mt-1 text-xs text-slate-500">{trackedSearch.query}</p>
+                        <p className="mt-1 text-xs text-muted">{trackedSearch.query}</p>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {trackedSearch.project.name}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
@@ -125,10 +125,10 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
                           {trackedSearch.isActive ? "Activa" : "Inactiva"}
                         </Badge>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {trackedSearch._count.snapshots}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {trackedSearch.snapshots[0]
                           ? formatDateTime(trackedSearch.snapshots[0].capturedAt)
                           : "Sin snapshot"}
@@ -148,7 +148,7 @@ export default async function CompetenciaPage({ searchParams }: CompetenciaPageP
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-line bg-slate-50 px-4 py-6 text-sm leading-6 text-slate-600">
+          <div className="rounded-2xl border border-line bg-panel-raised px-4 py-6 text-sm leading-6 text-muted">
             Todavia no hay busquedas monitoreadas para este filtro.
           </div>
         )}

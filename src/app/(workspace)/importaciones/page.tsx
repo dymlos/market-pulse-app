@@ -36,41 +36,41 @@ export default async function ImportacionesPage() {
           <div className="overflow-hidden rounded-2xl border border-line">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-line text-left">
-                <thead className="bg-slate-50">
+                <thead className="bg-panel-raised">
                   <tr>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Fecha
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Proyecto
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Archivo
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Tipo
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Estado
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Filas
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line bg-white">
+                <tbody className="divide-y divide-line bg-panel">
                   {recentImports.map((csvImport) => (
                     <tr key={csvImport.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {formatDateTime(csvImport.importedAt)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {csvImport.project.name}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {csvImport.fileName}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {csvImportTypeLabels[csvImport.type]}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
@@ -78,7 +78,7 @@ export default async function ImportacionesPage() {
                           {csvImportStatusLabels[csvImport.status]}
                         </Badge>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {csvImport.validRows ?? 0} validas / {csvImport.invalidRows ?? 0} invalidas
                       </td>
                     </tr>
@@ -88,7 +88,7 @@ export default async function ImportacionesPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-line bg-slate-50 px-4 py-6 text-sm leading-6 text-slate-600">
+          <div className="rounded-2xl border border-line bg-panel-raised px-4 py-6 text-sm leading-6 text-muted">
             Todavia no hay importaciones registradas.
           </div>
         )}

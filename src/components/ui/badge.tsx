@@ -1,11 +1,11 @@
 type BadgeTone = "default" | "success" | "warning" | "danger" | "muted";
 
 const toneClasses: Record<BadgeTone, string> = {
-  default: "border-slate-200 bg-slate-50 text-slate-700",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  warning: "border-amber-200 bg-amber-50 text-amber-700",
-  danger: "border-red-200 bg-red-50 text-red-700",
-  muted: "border-line bg-sand/60 text-slate-600",
+  default: "border-line bg-panel-raised text-ink",
+  success: "border-success/35 bg-success/10 text-success",
+  warning: "border-warning/35 bg-warning/10 text-warning",
+  danger: "border-danger/35 bg-danger/10 text-danger",
+  muted: "border-line bg-panel-raised text-muted",
 };
 
 type BadgeProps = {

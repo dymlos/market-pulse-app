@@ -34,7 +34,7 @@ type ChangeEventFormProps = {
 };
 
 const inputClass =
-  "mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:bg-slate-100 disabled:text-slate-500";
+  "mt-2 w-full rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm text-ink shadow-sm outline-none transition placeholder:text-muted/65 focus:border-accent focus:ring-2 focus:ring-accent/25 disabled:bg-panel disabled:text-muted";
 const labelClass = "text-sm font-semibold text-ink";
 
 export function ChangeEventForm({
@@ -108,7 +108,7 @@ export function ChangeEventForm({
       </div>
 
       {listings.length === 0 ? (
-        <p className="text-sm leading-6 text-amber-700">
+        <p className="text-sm leading-6 text-warning">
           Primero crea una publicacion para registrar cambios operativos.
         </p>
       ) : null}
@@ -197,7 +197,7 @@ export function ChangeEventForm({
       </div>
 
       <button
-        className="rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+        className="rounded-2xl bg-accent px-5 py-3 text-sm font-semibold text-shell shadow-sm transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-panel-raised disabled:text-muted"
         disabled={listings.length === 0}
         type="submit"
       >

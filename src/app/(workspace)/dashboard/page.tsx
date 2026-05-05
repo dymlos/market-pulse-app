@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         <SectionCard
           action={
             <Link
-              className="inline-flex rounded-2xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              className="inline-flex rounded-2xl bg-accent px-4 py-2 text-sm font-semibold text-shell shadow-sm transition hover:bg-accent/90"
               href="/cambios/nuevo"
             >
               Registrar cambio
@@ -60,29 +60,29 @@ export default async function DashboardPage() {
             <div className="overflow-hidden rounded-2xl border border-line">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-line text-left">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-panel-raised">
                     <tr>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                         Fecha
                       </th>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                         Cambio
                       </th>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                         Publicacion
                       </th>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                         Proyecto
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-line bg-white">
+                  <tbody className="divide-y divide-line bg-panel">
                     {overview.recentChanges.map((change) => (
                       <tr key={change.id}>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                        <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                           {formatDateTime(change.occurredAt)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-700">
+                        <td className="px-4 py-3 text-sm text-ink">
                           <div className="flex flex-col gap-2">
                             <Badge>{changeEventTypeLabels[change.type]}</Badge>
                             <Link className="font-semibold text-ink hover:text-accent" href={`/cambios/${change.id}`}>
@@ -90,12 +90,12 @@ export default async function DashboardPage() {
                             </Link>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-700">
+                        <td className="px-4 py-3 text-sm text-ink">
                           <Link className="font-semibold text-ink hover:text-accent" href={`/publicaciones/${change.listingId}`}>
                             {change.listing.title}
                           </Link>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-700">
+                        <td className="px-4 py-3 text-sm text-ink">
                           {change.listing.project.name}
                         </td>
                       </tr>
@@ -105,7 +105,7 @@ export default async function DashboardPage() {
               </div>
             </div>
           ) : (
-            <p className="rounded-2xl border border-line bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+            <p className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm leading-6 text-muted">
               Todavia no hay cambios recientes. El primer registro ya habilita la bitacora real.
             </p>
           )}
@@ -121,12 +121,12 @@ export default async function DashboardPage() {
               <h3 className="text-sm font-semibold text-ink">Proyectos nuevos</h3>
               <div className="mt-3 space-y-3">
                 {overview.recentProjects.map((project) => (
-                  <div key={project.id} className="rounded-2xl border border-line bg-slate-50 px-4 py-3">
+                  <div key={project.id} className="rounded-2xl border border-line bg-panel-raised px-4 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-semibold text-ink">{project.name}</span>
                       <Badge>{projectStatusLabels[project.status]}</Badge>
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">{formatDateTime(project.createdAt)}</p>
+                    <p className="mt-2 text-xs text-muted">{formatDateTime(project.createdAt)}</p>
                   </div>
                 ))}
               </div>
@@ -136,14 +136,14 @@ export default async function DashboardPage() {
               <h3 className="text-sm font-semibold text-ink">Publicaciones nuevas</h3>
               <div className="mt-3 space-y-3">
                 {overview.recentListings.map((listing) => (
-                  <div key={listing.id} className="rounded-2xl border border-line bg-slate-50 px-4 py-3">
+                  <div key={listing.id} className="rounded-2xl border border-line bg-panel-raised px-4 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <Link className="text-sm font-semibold text-ink hover:text-accent" href={`/publicaciones/${listing.id}`}>
                         {listing.title}
                       </Link>
                       <Badge>{listingStatusLabels[listing.status]}</Badge>
                     </div>
-                    <p className="mt-2 text-xs text-slate-500">{listing.project.name}</p>
+                    <p className="mt-2 text-xs text-muted">{listing.project.name}</p>
                   </div>
                 ))}
               </div>

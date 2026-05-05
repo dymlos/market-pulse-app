@@ -32,7 +32,7 @@ export default function ConfiguracionPage() {
           title="Flujo recomendado"
           description="Comandos listos para arrancar, validar y seguir construyendo."
         >
-          <div className="space-y-3 rounded-2xl border border-line bg-slate-950 p-4 font-mono text-sm text-slate-100">
+          <div className="space-y-3 rounded-2xl border border-line bg-shell p-4 font-mono text-sm text-ink">
             <div>npm install</div>
             <div>npm run db:push</div>
             <div>npm run dev</div>

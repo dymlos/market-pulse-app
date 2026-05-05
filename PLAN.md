@@ -3,6 +3,34 @@
 ## Estado general
 Objetivo actual: convertir la base tecnica ejecutable en una herramienta usable para registrar proyectos, publicaciones y cambios operativos con persistencia local.
 
+## Ajuste visual transversal - Paleta oscura
+Estado: completado en esta iteracion
+
+Objetivo:
+
+- aplicar la paleta `Noche Mineral + Cobre`
+- mejorar contraste y lectura en modo oscuro
+- mantener la interfaz como herramienta operativa sobria, no como demo decorativa
+
+Alcance:
+
+- tema base de Tailwind y estilos globales
+- shell, tarjetas, tablas, formularios, badges y estados visuales existentes
+- sin cambios funcionales ni nuevas dependencias
+
+Resultado logrado:
+
+- paleta `Noche Mineral + Cobre` aplicada al shell y componentes base
+- superficies claras reemplazadas por paneles oscuros en tablas, filtros, formularios y estados
+- acento cobre reservado para acciones principales y foco
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `npm run build`: bloqueado por `EPERM` de Windows al escanear carpetas protegidas del perfil del usuario, igual que en iteraciones previas
+- dev server local: intento realizado, pero no llego a exponer puerto `3000` en este entorno durante la verificacion automatica
+
 ## Etapa 1 - Preparacion del repo
 Estado: completada
 

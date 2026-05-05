@@ -66,12 +66,12 @@ type CsvMetricImportPanelProps = {
 };
 
 const inputClass =
-  "mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:bg-slate-100 disabled:text-slate-500";
+  "mt-2 w-full rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm text-ink shadow-sm outline-none transition placeholder:text-muted/65 focus:border-accent focus:ring-2 focus:ring-accent/25 disabled:bg-panel disabled:text-muted";
 const labelClass = "text-sm font-semibold text-ink";
 const secondaryButtonClass =
-  "rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:text-slate-400";
+  "rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:text-muted";
 const primaryButtonClass =
-  "rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400";
+  "rounded-2xl bg-accent px-5 py-3 text-sm font-semibold text-shell shadow-sm transition hover:bg-accent/90 disabled:cursor-not-allowed disabled:bg-panel-raised disabled:text-muted";
 
 function formatListingOption(listing: ListingOption) {
   const reference = listing.sku || listing.externalId || listing.id;
@@ -227,13 +227,13 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
       </div>
 
       {projects.length === 0 ? (
-        <div className="rounded-2xl border border-line bg-slate-50 px-4 py-4 text-sm text-slate-600">
+        <div className="rounded-2xl border border-line bg-panel-raised px-4 py-4 text-sm text-muted">
           Primero crea un proyecto activo para importar metricas.
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-2xl border border-danger/35 bg-danger/10 px-4 py-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -241,30 +241,30 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
       {preview ? (
         <div className="space-y-6">
           <div className="grid gap-3 md:grid-cols-4">
-            <div className="rounded-2xl border border-line bg-slate-50 p-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-2xl border border-line bg-panel-raised p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
                 Filas
               </div>
               <div className="mt-2 text-2xl font-semibold text-ink">{preview.totalRows}</div>
             </div>
-            <div className="rounded-2xl border border-line bg-slate-50 p-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-2xl border border-line bg-panel-raised p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
                 Validables
               </div>
               <div className="mt-2 text-2xl font-semibold text-ink">
                 {preview.validationSummary.validRows}
               </div>
             </div>
-            <div className="rounded-2xl border border-line bg-slate-50 p-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-2xl border border-line bg-panel-raised p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
                 Invalidas
               </div>
               <div className="mt-2 text-2xl font-semibold text-ink">
                 {preview.validationSummary.invalidRows}
               </div>
             </div>
-            <div className="rounded-2xl border border-line bg-slate-50 p-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="rounded-2xl border border-line bg-panel-raised p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
                 Omitidas
               </div>
               <div className="mt-2 text-2xl font-semibold text-ink">
@@ -299,7 +299,7 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-line bg-slate-50 p-4">
+          <div className="rounded-2xl border border-line bg-panel-raised p-4">
             <label className="flex items-start gap-3 text-sm font-semibold text-ink">
               <input
                 checked={createMissingListings}
@@ -316,23 +316,23 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
               <h3 className="text-base font-semibold text-ink">Vinculaciones manuales</h3>
               <div className="mt-3 overflow-hidden rounded-2xl border border-line">
                 <table className="min-w-full divide-y divide-line text-left">
-                  <thead className="bg-slate-50">
+                  <thead className="bg-panel-raised">
                     <tr>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
                         Referencia CSV
                       </th>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
                         Listing existente
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-line bg-white">
+                  <tbody className="divide-y divide-line bg-panel">
                     {preview.unresolvedListingReferences.map((reference) => (
                       <tr key={reference}>
-                        <td className="px-4 py-3 text-sm text-slate-700">{reference}</td>
+                        <td className="px-4 py-3 text-sm text-ink">{reference}</td>
                         <td className="px-4 py-3 text-sm">
                           <select
-                            className="w-full rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink"
+                            className="w-full rounded-2xl border border-line bg-panel-raised px-3 py-2 text-sm text-ink"
                             onChange={(event) =>
                               updateManualResolution(reference, event.target.value)
                             }
@@ -357,14 +357,14 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
           <div className="overflow-hidden rounded-2xl border border-line">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-line text-left">
-                <thead className="bg-slate-50">
+                <thead className="bg-panel-raised">
                   <tr>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
                       Fila
                     </th>
                     {preview.headers.map((header) => (
                       <th
-                        className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
+                        className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"
                         key={header}
                       >
                         {header}
@@ -372,15 +372,15 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line bg-white">
+                <tbody className="divide-y divide-line bg-panel">
                   {preview.previewRows.map((row) => (
                     <tr key={row.rowNumber}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted">
                         {row.rowNumber}
                       </td>
                       {row.cells.map((cell, index) => (
                         <td
-                          className="whitespace-nowrap px-4 py-3 text-sm text-slate-700"
+                          className="whitespace-nowrap px-4 py-3 text-sm text-ink"
                           key={`${row.rowNumber}-${preview.headers[index]}`}
                         >
                           {cell || "-"}
@@ -394,7 +394,7 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
           </div>
 
           {preview.parseErrors.length > 0 || preview.validationSummary.mappingErrors.length > 0 ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-2xl border border-warning/35 bg-warning/10 px-4 py-3 text-sm text-warning">
               {[...preview.validationSummary.mappingErrors, ...preview.parseErrors.map((item) => item.message)]
                 .slice(0, 6)
                 .join(" ")}
@@ -413,22 +413,22 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
       ) : null}
 
       {result ? (
-        <div className="rounded-2xl border border-line bg-white p-5">
+        <div className="rounded-2xl border border-line bg-panel p-5">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <h3 className="text-base font-semibold text-ink">Resultado: {result.status}</h3>
               {result.importId ? (
-                <p className="mt-1 text-xs text-slate-500">CsvImport {result.importId}</p>
+                <p className="mt-1 text-xs text-muted">CsvImport {result.importId}</p>
               ) : null}
             </div>
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-muted">
               {result.counts.validRows} validas / {result.counts.invalidRows} invalidas /{" "}
               {result.counts.skippedRows} omitidas
             </div>
           </div>
 
           {result.counts.createdListings > 0 ? (
-            <p className="mt-3 text-sm text-slate-600">
+            <p className="mt-3 text-sm text-muted">
               Se crearon {result.counts.createdListings} publicaciones nuevas.
             </p>
           ) : null}
@@ -436,29 +436,29 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
           {result.issues.length > 0 ? (
             <div className="mt-4 overflow-hidden rounded-2xl border border-line">
               <table className="min-w-full divide-y divide-line text-left">
-                <thead className="bg-slate-50">
+                <thead className="bg-panel-raised">
                   <tr>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
                       Fila
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
                       Tipo
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
                       Detalle
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line bg-white">
+                <tbody className="divide-y divide-line bg-panel">
                   {result.issues.slice(0, 12).map((issue, index) => (
                     <tr key={`${issue.type}-${issue.rowNumber ?? index}`}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted">
                         {issue.rowNumber ?? "-"}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {issue.type}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">{issue.message}</td>
+                      <td className="px-4 py-3 text-sm text-ink">{issue.message}</td>
                     </tr>
                   ))}
                 </tbody>

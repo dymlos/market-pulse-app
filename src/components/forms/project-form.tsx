@@ -17,7 +17,7 @@ type ProjectFormProps = {
 };
 
 const inputClass =
-  "mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15";
+  "mt-2 w-full rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm text-ink shadow-sm outline-none transition placeholder:text-muted/65 focus:border-accent focus:ring-2 focus:ring-accent/25";
 const labelClass = "text-sm font-semibold text-ink";
 
 export function ProjectForm({ action, project, submitLabel }: ProjectFormProps) {
@@ -101,7 +101,7 @@ export function ProjectForm({ action, project, submitLabel }: ProjectFormProps) 
 
       <div className="flex flex-wrap items-center gap-3">
         <button
-          className="rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+          className="rounded-2xl bg-accent px-5 py-3 text-sm font-semibold text-shell shadow-sm transition hover:bg-accent/90"
           type="submit"
         >
           {submitLabel}

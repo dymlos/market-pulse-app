@@ -51,7 +51,7 @@ export default async function CambiosPage({ searchParams }: CambiosPageProps) {
       <SectionCard
         action={
           <Link
-            className="inline-flex rounded-2xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex rounded-2xl bg-accent px-4 py-2 text-sm font-semibold text-shell shadow-sm transition hover:bg-accent/90"
             href={createHref}
           >
             Registrar cambio
@@ -60,13 +60,13 @@ export default async function CambiosPage({ searchParams }: CambiosPageProps) {
         title="Listado de cambios"
         description="Filtra por proyecto, publicacion o tipo para reconstruir rapido que se toco."
       >
-        <form className="mb-5 grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 lg:grid-cols-[1fr_1fr_0.8fr_auto_auto] lg:items-end">
+        <form className="mb-5 grid gap-3 rounded-2xl border border-line bg-panel-raised p-4 lg:grid-cols-[1fr_1fr_0.8fr_auto_auto] lg:items-end">
           <div>
             <label className="text-sm font-semibold text-ink" htmlFor="projectId">
               Proyecto
             </label>
             <select
-              className="mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              className="mt-2 w-full rounded-2xl border border-line bg-panel px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
               defaultValue={selectedProjectId}
               id="projectId"
               name="projectId"
@@ -85,7 +85,7 @@ export default async function CambiosPage({ searchParams }: CambiosPageProps) {
               Publicacion
             </label>
             <select
-              className="mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              className="mt-2 w-full rounded-2xl border border-line bg-panel px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
               defaultValue={selectedListingId}
               id="listingId"
               name="listingId"
@@ -104,7 +104,7 @@ export default async function CambiosPage({ searchParams }: CambiosPageProps) {
               Tipo
             </label>
             <select
-              className="mt-2 w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              className="mt-2 w-full rounded-2xl border border-line bg-panel px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
               defaultValue={selectedType ?? ""}
               id="type"
               name="type"
@@ -119,14 +119,14 @@ export default async function CambiosPage({ searchParams }: CambiosPageProps) {
           </div>
 
           <button
-            className="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
+            className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
             type="submit"
           >
             Filtrar
           </button>
           {(selectedProjectId || selectedListingId || selectedType) ? (
             <Link
-              className="rounded-2xl border border-line bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-accent hover:text-accent"
+              className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm font-semibold text-muted transition hover:border-accent hover:text-accent"
               href="/cambios"
             >
               Limpiar
@@ -138,46 +138,46 @@ export default async function CambiosPage({ searchParams }: CambiosPageProps) {
           <div className="overflow-hidden rounded-2xl border border-line">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-line text-left">
-                <thead className="bg-slate-50">
+                <thead className="bg-panel-raised">
                   <tr>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Fecha
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Tipo
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Publicacion
                     </th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Detalle
                     </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                    <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
                       Acciones
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line bg-white">
+                <tbody className="divide-y divide-line bg-panel">
                   {changes.map((change) => (
                     <tr key={change.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
                         {formatDateTime(change.occurredAt)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
                         <Badge>{changeEventTypeLabels[change.type]}</Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-ink">
                         <Link className="font-semibold text-ink hover:text-accent" href={`/publicaciones/${change.listingId}`}>
                           {change.listing.title}
                         </Link>
-                        <p className="mt-1 text-xs text-slate-500">{change.listing.project.name}</p>
+                        <p className="mt-1 text-xs text-muted">{change.listing.project.name}</p>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-ink">
                         <Link className="font-semibold text-ink hover:text-accent" href={`/cambios/${change.id}`}>
                           {change.detail}
                         </Link>
                         {change.comment ? (
-                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
                             {change.comment}
                           </p>
                         ) : null}
@@ -205,7 +205,7 @@ export default async function CambiosPage({ searchParams }: CambiosPageProps) {
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-line bg-slate-50 px-4 py-6 text-sm leading-6 text-slate-600">
+          <div className="rounded-2xl border border-line bg-panel-raised px-4 py-6 text-sm leading-6 text-muted">
             No hay cambios para este filtro. Registra el primer evento para empezar la bitacora.
           </div>
         )}
