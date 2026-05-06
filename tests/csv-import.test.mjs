@@ -53,6 +53,9 @@ const {
   buildShelfPresence,
   compareSearchSnapshots,
 } = loadTypeScriptModule("src/lib/search-snapshot-comparison.ts");
+const {
+  generateOpportunitySignalCandidates,
+} = loadTypeScriptModule("src/lib/opportunity-rules.ts");
 
 test("parseCsv supports quoted semicolon CSV rows", () => {
   const parsed = parseCsv(
@@ -312,6 +315,141 @@ test("compareSearchSnapshots finds new competitors and price changes", () => {
   assert.equal(comparison.priceChanges[0].absoluteDelta, 2000);
 });
 
+test("generateOpportunitySignalCandidates flags absent own presence as high priority", () => {
+  const signals = generateOpportunitySignalCandidates({
+    now: new Date("2026-05-05T12:00:00.000Z"),
+    context: makeOpportunityContext({
+      trackedSearches: [
+        makeTrackedSearch({
+          id: "search-absent",
+          snapshots: [
+            {
+              id: "snapshot-absent",
+              capturedAt: new Date("2026-05-01T12:00:00.000Z"),
+              results: [
+                makeOpportunitySearchResult({
+                  id: "r1",
+                  position: 1,
+                  seller: "Outdoor North",
+                  competitorId: "north",
+                  price: 40000,
+                }),
+                makeOpportunitySearchResult({
+                  id: "r2",
+                  position: 2,
+                  seller: "Ruta Camping",
+                  competitorId: "ruta",
+                  price: 43000,
+                }),
+              ],
+            },
+          ],
+        }),
+      ],
+    }),
+  });
+
+  const absentSignal = signals.find((signal) => signal.ruleId === "search-no-own-presence");
+
+  assert.ok(absentSignal);
+  assert.equal(absentSignal.type, "VISIBILITY_GAP");
+  assert.equal(absentSignal.severity, "HIGH");
+});
+
+test("generateOpportunitySignalCandidates flags visible search price gaps", () => {
+  const signals = generateOpportunitySignalCandidates({
+    now: new Date("2026-05-05T12:00:00.000Z"),
+    context: makeOpportunityContext({
+      trackedSearches: [
+        makeTrackedSearch({
+          id: "search-price-gap",
+          snapshots: [
+            {
+              id: "snapshot-price-gap",
+              capturedAt: new Date("2026-05-01T12:00:00.000Z"),
+              results: [
+                makeOpportunitySearchResult({
+                  id: "r1",
+                  position: 1,
+                  seller: "Outdoor North",
+                  competitorId: "north",
+                  price: 30000,
+                }),
+                makeOpportunitySearchResult({
+                  id: "r2",
+                  position: 2,
+                  isOwnListing: true,
+                  ownListingId: "listing-1",
+                  price: 52000,
+                }),
+                makeOpportunitySearchResult({
+                  id: "r3",
+                  position: 3,
+                  seller: "Pampa Gear",
+                  competitorId: "pampa",
+                  price: 54000,
+                }),
+              ],
+            },
+          ],
+        }),
+      ],
+    }),
+  });
+
+  const priceSignal = signals.find((signal) => signal.ruleId === "search-visible-price-gap");
+
+  assert.ok(priceSignal);
+  assert.equal(priceSignal.type, "PRICE_GAP");
+  assert.equal(priceSignal.severity, "MEDIUM");
+});
+
+test("generateOpportunitySignalCandidates flags changes without posterior tracking", () => {
+  const signals = generateOpportunitySignalCandidates({
+    now: new Date("2026-05-05T12:00:00.000Z"),
+    context: makeOpportunityContext({
+      listings: [
+        {
+          id: "listing-no-follow-up",
+          title: "Publicacion sin seguimiento",
+          metricSnapshots: [
+            {
+              id: "snapshot-before",
+              snapshotDate: new Date("2026-04-20T00:00:00.000Z"),
+              visits: 80,
+              salesUnits: 4,
+              conversionRate: 5,
+            },
+            {
+              id: "snapshot-before-2",
+              snapshotDate: new Date("2026-04-25T00:00:00.000Z"),
+              visits: 82,
+              salesUnits: 4,
+              conversionRate: 4.88,
+            },
+          ],
+          changeEvents: [
+            {
+              id: "change-after",
+              occurredAt: new Date("2026-04-28T12:00:00.000Z"),
+              type: "PRICE_UPDATE",
+              detail: "Baja de precio",
+            },
+          ],
+        },
+      ],
+    }),
+  });
+
+  const followUpSignal = signals.find(
+    (signal) => signal.ruleId === "listing-change-without-follow-up",
+  );
+
+  assert.ok(followUpSignal);
+  assert.equal(followUpSignal.type, "OTHER");
+  assert.equal(followUpSignal.severity, "MEDIUM");
+});
+
 function makeSearchResult({
   id,
   position,
@@ -334,5 +472,53 @@ function makeSearchResult({
     externalListingId,
     competitor: competitorId && seller ? { id: competitorId, name: seller } : null,
     ownListing: ownListingId ? { id: ownListingId, title: "Publicacion propia" } : null,
+  };
+}
+
+function makeOpportunityContext({ listings = [], trackedSearches = [] } = {}) {
+  return {
+    project: {
+      id: "project-1",
+      name: "Proyecto demo",
+      currencyCode: "ARS",
+    },
+    listings,
+    trackedSearches,
+  };
+}
+
+function makeTrackedSearch({ id, snapshots }) {
+  return {
+    id,
+    name: id,
+    query: id,
+    isActive: true,
+    snapshots,
+  };
+}
+
+function makeOpportunitySearchResult({
+  id,
+  position,
+  isOwnListing = false,
+  ownListingId = null,
+  competitorId = null,
+  seller = null,
+  price = null,
+  visibleFlags = null,
+  notes = null,
+}) {
+  return {
+    id,
+    position,
+    observedTitle: `${seller ?? "Publicacion propia"} ejemplo`,
+    observedPrice: price,
+    observedSellerName: seller,
+    visibleFlags,
+    notes,
+    isOwnListing,
+    ownListingId,
+    competitorId,
+    competitorName: seller,
   };
 }

@@ -6,6 +6,9 @@ import {
   InsightStatus,
   InsightType,
   ListingStatus,
+  OpportunitySeverity,
+  OpportunityStatus,
+  OpportunityType,
   ProjectStatus,
   SearchSnapshotSource,
 } from "@/generated/prisma";
@@ -84,9 +87,34 @@ export const insightStatusLabels: Record<InsightStatus, string> = {
   ARCHIVED: "Archivada",
 };
 
+export const opportunityTypeLabels: Record<OpportunityType, string> = {
+  VISIBILITY_GAP: "Brecha de visibilidad",
+  PRICE_GAP: "Hueco de precio",
+  STOCK_ADVANTAGE: "Ventaja de stock",
+  COMPETITOR_EXIT: "Salida de competidor",
+  COMPETITOR_PRESSURE: "Presion competitiva",
+  ASSORTMENT_GAP: "Hueco de surtido",
+  OTHER: "Senal operativa",
+};
+
+export const opportunitySeverityLabels: Record<OpportunitySeverity, string> = {
+  LOW: "baja",
+  MEDIUM: "media",
+  HIGH: "alta",
+};
+
+export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
+  NEW: "Nueva",
+  REVIEWED: "Revisada",
+  DISMISSED: "Descartada",
+  ACTIONED: "Accionada",
+};
+
 export const projectStatusOptions = Object.values(ProjectStatus);
 export const listingStatusOptions = Object.values(ListingStatus);
 export const changeEventTypeOptions = Object.values(ChangeEventType);
+export const opportunitySeverityOptions = Object.values(OpportunitySeverity);
+export const opportunityStatusOptions = Object.values(OpportunityStatus);
 
 export function projectStatusTone(status: ProjectStatus) {
   if (status === ProjectStatus.ACTIVE) {
@@ -131,6 +159,30 @@ export function insightConfidenceTone(confidence: InsightConfidence | "LOW" | "M
 
   if (confidence === "MEDIUM") {
     return "warning" as const;
+  }
+
+  return "muted" as const;
+}
+
+export function opportunitySeverityTone(severity: OpportunitySeverity) {
+  if (severity === OpportunitySeverity.HIGH) {
+    return "danger" as const;
+  }
+
+  if (severity === OpportunitySeverity.MEDIUM) {
+    return "warning" as const;
+  }
+
+  return "muted" as const;
+}
+
+export function opportunityStatusTone(status: OpportunityStatus) {
+  if (status === OpportunityStatus.NEW) {
+    return "warning" as const;
+  }
+
+  if (status === OpportunityStatus.REVIEWED || status === OpportunityStatus.ACTIONED) {
+    return "success" as const;
   }
 
   return "muted" as const;

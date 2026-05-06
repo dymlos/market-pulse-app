@@ -21,6 +21,7 @@ El repositorio ya tiene una base local-first en funcionamiento con:
 - importacion CSV de metricas historicas como snapshots reales
 - primera version del timeline causal por publicacion
 - competencia acotada con busquedas monitoreadas, snapshots manuales, resultados observados y comparacion simple
+- primera version de oportunidades operativas con reglas explicitas, filtros y gestion de estado
 
 La base queda preparada para cargar datos reales y cruzar mas adelante contexto competitivo con el timeline causal, sin prometer causalidad absoluta.
 
@@ -191,6 +192,33 @@ El share of shelf de esta etapa es deliberadamente simple:
 
 No hay scraping, automatizaciones externas, IA ni inteligencia competitiva masiva. El modulo existe como contexto operativo para explicar mejor que pudo haber pasado.
 
+## Oportunidades operativas
+La pantalla `Oportunidades` permite generar y gestionar `OpportunitySignal` desde reglas transparentes.
+
+Flujo soportado:
+
+1. Filtrar por proyecto, publicacion, busqueda monitoreada, prioridad o estado.
+2. Ejecutar `Detectar senales` para evaluar reglas sobre datos locales cargados.
+3. Revisar explicacion, prioridad, proyecto y vinculos a publicacion o busqueda.
+4. Marcar cada senal como nueva, revisada, descartada o accionada.
+
+Reglas iniciales:
+
+- busquedas sin snapshots o sin snapshots recientes
+- ausencia o baja presencia propia en busquedas monitoreadas
+- salida de competidores visibles entre snapshots
+- concentracion de pocos competidores
+- huecos observables de precio
+- competidores con disponibilidad dudosa o senales de stock
+- cambios de presencia propia en top 5/top 10
+- publicaciones con cambios sin mejora visible
+- publicaciones con buena conversion y poca visibilidad
+- metricas estancadas con poca actividad reciente
+- cambios sin seguimiento posterior
+- publicaciones con cambios pero sin contexto competitivo reciente
+
+La generacion es manual e idempotente: no borra senales existentes ni pisa estados revisados o descartados. No usa IA, scraping, scheduler ni scoring opaco.
+
 ## Persistencia local
 La base de datos operativa se crea en:
 
@@ -225,9 +253,11 @@ El seed actual crea:
 - 3 insights
 - 2 senales de oportunidad
 
-## Que sigue despues de este bloque
-El siguiente bloque recomendado es decidir entre:
+La deteccion manual de oportunidades puede crear senales adicionales sobre esos mismos datos demo, segun las reglas vigentes y la fecha de evaluacion.
 
-- conectar este contexto competitivo al timeline causal de forma prudente
-- avanzar con oportunidades operativas simples derivadas de snapshots cargados
-- mejorar validaciones/manualidad de carga sin abrir scraping ni automatizaciones externas
+## Que sigue despues de este bloque
+El siguiente bloque recomendado es conectar oportunidades con aprendizaje operativo:
+
+- permitir convertir una senal revisada en un cambio planificado o nota de aprendizaje
+- mostrar senales cercanas dentro del timeline causal de una publicacion
+- mejorar carga manual de snapshots competitivos sin abrir scraping ni automatizaciones externas

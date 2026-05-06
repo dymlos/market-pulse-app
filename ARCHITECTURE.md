@@ -18,16 +18,15 @@ Preparar una app web real que corra primero en una sola PC, sin hosting obligato
 - `SQLite`
 
 ## Decision de esta iteracion
-Se agrego una primera capa usable de competencia acotada sin cambiar el modelo de datos:
+Se agrego una primera capa usable de oportunidades operativas sin cambiar el modelo de datos:
 
-- busquedas monitoreadas editables
-- snapshots manuales por fecha
-- resultados observados cargados manualmente
-- competidores simples reutilizables
-- comparacion entre dos snapshots de una misma busqueda
-- share of shelf simple basado en resultados cargados
+- reglas puras y testeables para detectar senales
+- persistencia idempotente en `OpportunitySignal`
+- filtros por proyecto, publicacion, busqueda, severidad y estado
+- cambio simple de estado: nueva, revisada, descartada o accionada
+- explicaciones legibles y prudentes conectadas a datos cargados
 
-La decision se mantiene alineada con el producto: competencia es contexto operativo para la bitacora causal, no una suite de market intelligence.
+La decision se mantiene alineada con el producto: oportunidades son senales operativas derivadas del contexto real cargado, no un radar generico ni una recomendacion automatica.
 
 ## Capas actuales
 ### 1. Presentacion
@@ -53,6 +52,7 @@ Responsable de:
 - parseo, mapping y validacion de CSV de metricas
 - comparacion simple entre snapshots de busqueda
 - calculo de presencia propia, presencia por competidor y entradas/salidas entre snapshots
+- reglas explicitas para oportunidades operativas y priorizacion simple
 
 Ubicacion:
 
@@ -127,12 +127,39 @@ En esta etapa, share of shelf significa conteos visibles sobre lo cargado manual
 
 No se implementa scraping, crawling, automatizacion externa, share of shelf ponderado ni integracion profunda con el timeline causal.
 
+## Oportunidades operativas
+La capa de oportunidades reutiliza `OpportunitySignal` y agrega dos piezas:
+
+- `src/lib/opportunity-rules.ts`: reglas puras sin Prisma ni UI, pensadas para testear deteccion y prioridad.
+- `src/lib/opportunity-service.ts`: carga contexto desde Prisma, ejecuta reglas y persiste senales nuevas sin duplicar las ya existentes.
+
+La generacion se dispara manualmente desde la pantalla `Oportunidades`. No hay scheduler ni mutacion al cargar la pagina.
+
+La deduplicacion actual evita repetir senales comparando:
+
+- proyecto
+- publicacion opcional
+- busqueda opcional
+- tipo
+- explicacion
+
+Esto mantiene el schema estable en esta etapa. Si mas adelante hace falta trazabilidad fina, se puede agregar una columna explicita de `ruleKey` o `sourceRule`.
+
+La priorizacion es cualitativa y visible:
+
+- `HIGH`: ausencia propia en una busqueda monitoreada o perdida fuerte de top 5.
+- `MEDIUM`: huecos de precio, disponibilidad dudosa de competidor, actividad operativa con resultados dudosos, cambios sin seguimiento o baja visibilidad con buena conversion.
+- `LOW`: datos desactualizados, estancamiento suave o falta de contexto competitivo.
+
+No se implementa IA, scoring opaco, scraping, prediccion ni recomendaciones automaticas complejas.
+
 ## Relaciones clave
 - `Project -> Listing` es la relacion principal del MVP.
 - `Listing -> ListingMetricSnapshot` y `Listing -> ChangeEvent` modelan la memoria operativa antes/despues.
 - `Project -> TrackedSearch -> SearchSnapshot -> SearchResultItem` modela el contexto competitivo minimo.
 - `SearchResultItem` puede apuntar a `Competitor` o a `Listing` para distinguir presencia propia y ajena en una misma observacion.
 - `Insight` y `OpportunitySignal` se cuelgan del proyecto y opcionalmente de una publicacion o busqueda para evitar sobreacoplar la capa explicativa.
+- `OpportunitySignal` conserva estado de revision para no mezclar senales nuevas con senales ya revisadas, descartadas o accionadas.
 
 ## Decisiones de naming
 - Se reemplazo `MetricSnapshot` por `ListingMetricSnapshot` para dejar explicito que el snapshot pertenece a una publicacion propia.

@@ -1,4 +1,9 @@
-import { ChangeEventType, ProjectStatus } from "@/generated/prisma";
+import {
+  ChangeEventType,
+  OpportunitySeverity,
+  OpportunityStatus,
+  ProjectStatus,
+} from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { compareSearchSnapshots } from "@/lib/search-snapshot-comparison";
 
@@ -312,5 +317,29 @@ export async function getCsvImports(projectId?: string) {
     },
     orderBy: { importedAt: "desc" },
     take: 15,
+  });
+}
+
+export async function getOpportunitySignals(filters: {
+  projectId?: string;
+  listingId?: string;
+  trackedSearchId?: string;
+  severity?: OpportunitySeverity;
+  status?: OpportunityStatus;
+} = {}) {
+  return prisma.opportunitySignal.findMany({
+    where: {
+      projectId: filters.projectId || undefined,
+      listingId: filters.listingId || undefined,
+      trackedSearchId: filters.trackedSearchId || undefined,
+      severity: filters.severity || undefined,
+      status: filters.status || undefined,
+    },
+    include: {
+      project: true,
+      listing: true,
+      trackedSearch: true,
+    },
+    orderBy: [{ detectedAt: "desc" }, { createdAt: "desc" }],
   });
 }

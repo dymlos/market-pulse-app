@@ -6,9 +6,11 @@ import { redirect } from "next/navigation";
 import {
   ChangeEventType,
   ListingStatus,
+  OpportunityStatus,
   ProjectStatus,
   SearchSnapshotSource,
 } from "@/generated/prisma";
+import { detectAndPersistOpportunitySignals } from "@/lib/opportunity-service";
 import { prisma } from "@/lib/prisma";
 
 function getText(formData: FormData, name: string) {
@@ -100,6 +102,12 @@ function coerceSearchSnapshotSource(value: string) {
   return Object.values(SearchSnapshotSource).includes(value as SearchSnapshotSource)
     ? (value as SearchSnapshotSource)
     : SearchSnapshotSource.MANUAL;
+}
+
+function coerceOpportunityStatus(value: string) {
+  return Object.values(OpportunityStatus).includes(value as OpportunityStatus)
+    ? (value as OpportunityStatus)
+    : OpportunityStatus.NEW;
 }
 
 function parseOccurredAt(value: string) {
@@ -633,6 +641,37 @@ export async function createSearchResultItem(formData: FormData) {
   revalidatePath(`/competencia/${snapshot.trackedSearchId}`);
   revalidatePath(`/competencia/${snapshot.trackedSearchId}/snapshots/${snapshot.id}`);
   redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}result=created`);
+}
+
+export async function detectOpportunitySignalsAction(formData: FormData) {
+  const projectId = getOptionalText(formData, "projectId") ?? undefined;
+  const returnTo = getReturnPath(formData, projectId ? `/oportunidades?projectId=${projectId}` : "/oportunidades");
+  const result = await detectAndPersistOpportunitySignals({ projectId });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/oportunidades");
+  redirect(
+    `${returnTo}${returnTo.includes("?") ? "&" : "?"}generated=${result.createdCount}&candidates=${result.candidateCount}&existing=${result.existingCount}`,
+  );
+}
+
+export async function updateOpportunitySignalStatus(formData: FormData) {
+  const opportunitySignalId = getText(formData, "opportunitySignalId");
+  const returnTo = getReturnPath(formData, "/oportunidades");
+
+  if (!opportunitySignalId) {
+    redirectWithError(returnTo, "No se encontro la senal a actualizar.");
+  }
+
+  await prisma.opportunitySignal.update({
+    where: { id: opportunitySignalId },
+    data: {
+      status: coerceOpportunityStatus(getText(formData, "status")),
+    },
+  });
+
+  revalidatePath("/oportunidades");
+  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}updated=1`);
 }
 
 async function findCompetitorByName(projectId: string, name: string) {

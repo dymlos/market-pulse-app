@@ -1,7 +1,7 @@
 # PLAN.md
 
 ## Estado general
-Objetivo actual: ampliar el contexto competitivo minimo sin desviar el nucleo causal: busquedas monitoreadas, snapshots manuales comparables, resultados observados y share of shelf simple.
+Objetivo actual: implementar oportunidades operativas simples y explicables a partir de metricas propias, cambios registrados y contexto competitivo cargado, sin convertir el producto en una suite generica de inteligencia.
 
 ## Ajuste visual transversal - Paleta oscura
 Estado: completado en esta iteracion
@@ -241,7 +241,7 @@ Validacion:
 - base local por defecto `data/market-pulse.local.db`: sigue presentando `disk I/O error` de SQLite, problema ya observado en logs previos
 
 ## Etapa 8 - Oportunidades
-Estado: pendiente
+Estado: implementada en esta iteracion, pendiente de revision visual manual
 
 Objetivo:
 
@@ -251,6 +251,50 @@ Objetivo:
 Resultado esperado:
 
 - capa de accion complementaria al nucleo causal
+
+Alcance de la iteracion actual:
+
+- listar `OpportunitySignal` con filtros por proyecto, publicacion, busqueda, severidad y estado
+- generar senales mediante reglas explicitas y transparentes
+- persistir senales de forma idempotente sin borrar estados revisados o descartados
+- permitir marcar senales como nuevas, revisadas, descartadas o accionadas
+- cubrir baja/ausencia de presencia propia, competidores que salen, concentracion competitiva, huecos de precio, cambios de top 5/top 10, publicaciones con cambios sin mejora, conversion con baja visibilidad, estancamiento, datos insuficientes y falta de seguimiento posterior
+
+Restricciones:
+
+- sin IA
+- sin scraping
+- sin scheduler
+- sin scoring opaco
+- UI minima basada en filtros, tabla y detalle textual
+
+Resultado logrado:
+
+- vista `/oportunidades` conectada a `OpportunitySignal`
+- filtros por proyecto, publicacion, busqueda monitoreada, prioridad y estado
+- accion manual para detectar senales
+- reglas puras en `src/lib/opportunity-rules.ts`
+- persistencia idempotente en `src/lib/opportunity-service.ts`
+- cambio de estado por senal desde la tabla
+- tests de reglas para ausencia propia, huecos de precio y cambios sin seguimiento
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npm test`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- validacion Prisma contra base temporal `tmp/opportunity-validation.db`: seed demo correcto, primera deteccion creo 6 senales nuevas y segunda deteccion creo 0 duplicados
+- cambio de estado validado en base temporal de `NEW` a `REVIEWED`
+- dev server temporal en `http://127.0.0.1:3010`: `/oportunidades` respondio 200 y `/oportunidades?status=REVIEWED` respondio 200
+- `npm run build`: bloqueado por `EPERM` de Windows al escanear `C:\Users\user\Configuracion local`, mismo limite de entorno documentado en iteraciones previas
+
+Limites conocidos:
+
+- la base local por defecto `data/market-pulse.local.db` sigue mostrando `disk I/O error` de SQLite en este entorno
+- la deduplicacion usa alcance + tipo + explicacion porque el schema aun no tiene `ruleKey`
+- no hay conversion de senal a tarea/cambio planificado
+- no hay edicion ni archivado masivo de senales
+- no hay automatizacion programada
 
 ## Etapa 9 - Pruebas y hardening
 Estado: pendiente
