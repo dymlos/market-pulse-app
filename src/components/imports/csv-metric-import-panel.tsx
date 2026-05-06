@@ -105,26 +105,30 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
     setError("");
     setResult(null);
 
-    const formData = new FormData();
-    formData.append("projectId", projectId);
-    formData.append("file", file);
+    try {
+      const formData = new FormData();
+      formData.append("projectId", projectId);
+      formData.append("file", file);
 
-    const response = await fetch("/api/importaciones/metricas/preview", {
-      method: "POST",
-      body: formData,
-    });
-    const payload = await response.json();
+      const response = await fetch("/api/importaciones/metricas/preview", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await response.json().catch(() => ({}));
 
-    setIsPreviewing(false);
+      if (!response.ok || !payload.ok || !payload.preview) {
+        setError(payload.error ?? "No se pudo previsualizar el CSV.");
+        return;
+      }
 
-    if (!response.ok || !payload.ok) {
-      setError(payload.error ?? "No se pudo previsualizar el CSV.");
-      return;
+      setPreview(payload.preview);
+      setMapping(payload.preview.suggestedMapping ?? {});
+      setManualResolutions({});
+    } catch {
+      setError("No se pudo conectar con el importador local.");
+    } finally {
+      setIsPreviewing(false);
     }
-
-    setPreview(payload.preview);
-    setMapping(payload.preview.suggestedMapping ?? {});
-    setManualResolutions({});
   }
 
   async function requestImport() {
@@ -136,27 +140,31 @@ export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
     setIsImporting(true);
     setError("");
 
-    const formData = new FormData();
-    formData.append("projectId", projectId);
-    formData.append("file", file);
-    formData.append("mapping", JSON.stringify(mapping));
-    formData.append("manualResolutions", JSON.stringify(manualResolutions));
-    formData.append("createMissingListings", createMissingListings ? "true" : "false");
+    try {
+      const formData = new FormData();
+      formData.append("projectId", projectId);
+      formData.append("file", file);
+      formData.append("mapping", JSON.stringify(mapping));
+      formData.append("manualResolutions", JSON.stringify(manualResolutions));
+      formData.append("createMissingListings", createMissingListings ? "true" : "false");
 
-    const response = await fetch("/api/importaciones/metricas", {
-      method: "POST",
-      body: formData,
-    });
-    const payload = await response.json();
+      const response = await fetch("/api/importaciones/metricas", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await response.json().catch(() => ({}));
 
-    setIsImporting(false);
+      if (!response.ok || !payload.result) {
+        setError(payload.error ?? "No se pudo importar el CSV.");
+        return;
+      }
 
-    if (!response.ok) {
-      setError(payload.error ?? "No se pudo importar el CSV.");
-      return;
+      setResult(payload.result);
+    } catch {
+      setError("No se pudo conectar con el importador local.");
+    } finally {
+      setIsImporting(false);
     }
-
-    setResult(payload.result);
   }
 
   function updateMapping(field: MetricImportField, header: string) {

@@ -1,7 +1,7 @@
 # PLAN.md
 
 ## Estado general
-Objetivo actual: implementar oportunidades operativas simples y explicables a partir de metricas propias, cambios registrados y contexto competitivo cargado, sin convertir el producto en una suite generica de inteligencia.
+Objetivo actual: cerrar la etapa 1 con hardening, QA, validaciones minimas, demo local confiable y documentacion operativa clara, sin abrir nuevos frentes de producto.
 
 ## Ajuste visual transversal - Paleta oscura
 Estado: completado en esta iteracion
@@ -168,7 +168,7 @@ Validacion:
 - verificacion de persistencia: flujo validado por API durante la iteracion; al cierre, SQLite quedo bloqueado por `disk I/O error` incluso en una base aislada, por lo que conviene reiniciar procesos dev antes de una nueva prueba manual
 
 ## Etapa 6 - Timeline causal
-Estado: en progreso en esta iteracion
+Estado: completada en esta iteracion
 
 Objetivo:
 
@@ -296,18 +296,68 @@ Limites conocidos:
 - no hay edicion ni archivado masivo de senales
 - no hay automatizacion programada
 
-## Etapa 9 - Pruebas y hardening
-Estado: pendiente
+## Etapa 9 - Hardening, QA y cierre de etapa 1
+Estado: completada en esta iteracion
 
 Objetivo:
 
-- pruebas unitarias y e2e donde aporte valor
-- validaciones de importacion y persistencia
-- mejoras de robustez y DX
+- revisar flujos criticos de etapa 1
+- corregir fallas o fragilidades sin refactors masivos
+- mejorar validaciones y errores entendibles
+- asegurar que el seed deje una demo local clara
+- ampliar pruebas donde aporten mas valor con bajo costo
+- documentar como levantar, regenerar base y probar la demo
 
 Resultado esperado:
 
-- base confiable para seguir iterando
+- etapa 1 consistente, usable y demostrable localmente
+
+Alcance de la iteracion actual:
+
+- formularios y server actions del nucleo operativo
+- importacion CSV de snapshots metricos
+- timeline causal por publicacion
+- competencia acotada con snapshots comparables
+- oportunidades operativas y cambio de estado
+- README, PLAN y log de cierre
+
+Restricciones:
+
+- sin IA
+- sin scraping
+- sin nuevos modulos
+- sin rediseño visual ni refactor frontend grande
+
+Resultado logrado:
+
+- validaciones server-side agregadas para proyectos, publicaciones, cambios, busquedas monitoreadas, snapshots, resultados observados y estado de oportunidades
+- errores no silenciosos para IDs inexistentes, proyectos archivados, numeros invalidos, posiciones repetidas y acciones sobre entidades faltantes
+- importador CSV mas robusto ante errores de red local, respuestas no JSON y respuestas incompletas
+- samples CSV reales agregados para demo: valido, headers alternativos y filas invalidas
+- seed demo ajustado con snapshots competitivos comparables y resultados observados suficientes para probar comparaciones y oportunidades
+- README actualizado con setup desde cero, regeneracion de base, flujo recomendado de demo y limitaciones actuales
+- pruebas ampliadas para resumen de metricas, comparacion de snapshots y senales de oportunidad
+
+Validacion:
+
+- `npm test`: correcto
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `npm run build`: correcto al aislar `HOME` y `USERPROFILE` dentro de `tmp/home`, evitando el `EPERM` de Windows al escanear carpetas protegidas del perfil
+- `npm run db:reset`: correcto contra base temporal fuera del sandbox
+- `npm run db:seed`: correcto contra base temporal fuera del sandbox
+- app levantada en `http://127.0.0.1:3000` contra base temporal de validacion, con dev server reiniciado limpio despues del build
+- rutas principales de dashboard, proyectos, publicaciones, cambios, importaciones, competencia, snapshot competitivo, oportunidades y configuracion respondieron 200
+- API de preview CSV respondio 200 con mapping sugerido
+- API de importacion CSV respondio 200 con resultado `PROCESSED`
+
+Limites conocidos:
+
+- el sandbox de Codex sigue generando `disk I/O error` con SQLite; la validacion real de base se hizo fuera del sandbox contra una base temporal local
+- en este Windows, `npm run build` puede fallar si Next hereda `HOME` o `USERPROFILE` del perfil del usuario y trata de tracear carpetas protegidas como `Configuracion local`
+- las oportunidades siguen siendo heuristicas prudentes, no causalidad estadistica
+- la competencia sigue siendo contexto manual, sin scraping ni automatizacion externa
+- la UI queda funcional y coherente para demo, pero pendiente de revision visual manual fina
 
 ## Regla de priorizacion
 Si aparece una duda entre construir algo vistoso de competencia o fortalecer causalidad, memoria operativa o carga local de datos:

@@ -81,7 +81,7 @@ Estas paginas ya tienen estructura visual, copy alineado al producto y placehold
 `-- tsconfig.json
 ```
 
-## Como correr la app
+## Como levantar el proyecto desde cero
 1. Instalar dependencias:
 
 ```bash
@@ -116,6 +116,23 @@ npm run dev
 
 ```text
 http://localhost:3000
+```
+
+Si ya tenes dependencias instaladas y solo queres regenerar la demo local:
+
+```bash
+npm run db:reset
+npm run db:seed
+npm run dev
+```
+
+En Windows, si `npm run build` falla con `EPERM` intentando escanear carpetas protegidas del perfil del usuario, ejecutar el build con `HOME` y `USERPROFILE` apuntando a una carpeta temporal dentro del repo. Por ejemplo en PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force -Path ".\tmp\home" | Out-Null
+$env:HOME = "$PWD\tmp\home"
+$env:USERPROFILE = "$PWD\tmp\home"
+npm run build
 ```
 
 ## Flujo de base de datos
@@ -248,12 +265,33 @@ El seed actual crea:
 - 6 eventos de cambio
 - 2 busquedas monitoreadas
 - 3 competidores
-- 2 snapshots de competencia con resultados observados
+- 4 snapshots de competencia con 20 resultados observados
 - 2 registros de importacion CSV
 - 3 insights
 - 2 senales de oportunidad
 
 La deteccion manual de oportunidades puede crear senales adicionales sobre esos mismos datos demo, segun las reglas vigentes y la fecha de evaluacion.
+
+## Flujo recomendado para demo local
+1. Abrir `Dashboard` para ver que los datos locales cargaron.
+2. Ir a `Publicaciones` y abrir `Mate termico acero inoxidable 1L pico cebador`.
+3. Revisar resumen de metricas, insights heuristicos y timeline causal.
+4. Entrar a `Cambios` y registrar un cambio nuevo sobre una publicacion.
+5. Ir a `Importaciones` y probar `samples/csv/metric-snapshots.sample.csv`.
+6. Entrar a `Competencia`, abrir una busqueda monitoreada y comparar dos snapshots.
+7. Abrir un snapshot competitivo y cargar un resultado observado manual.
+8. Ir a `Oportunidades`, ejecutar `Detectar senales` y cambiar el estado de una senal.
+
+Ese recorrido cubre el objetivo de etapa 1: ver que se toco, que cambio despues en metricas, que contexto competitivo habia y que senales accionables quedan para revisar.
+
+## Limitaciones actuales de etapa 1
+- No hay IA, scraping, scheduler ni automatizaciones externas.
+- La carga competitiva es manual; no mide market share real ni hace crawling.
+- Las explicaciones son heuristicas prudentes, no causalidad estadistica.
+- La importacion CSV implementada cubre snapshots metricos de publicaciones, no cambios ni resultados competitivos.
+- La deduplicacion de oportunidades usa alcance + tipo + explicacion; todavia no existe `ruleKey` persistido.
+- No hay multiusuario, permisos avanzados ni sincronizacion remota.
+- La UI es funcional y basica; queda pensada para revision manual del usuario antes de pulido visual.
 
 ## Que sigue despues de este bloque
 El siguiente bloque recomendado es conectar oportunidades con aprendizaje operativo:

@@ -1,4 +1,4 @@
-listing_external_id,snapshot_date,visits,orders,revenue,conversion_rate,stock,price,ad_spend,notes
-MLA-TERMICO-001,2026-04-21,184,17,662983,0.0924,39,38999,8200,import valido por ID externo
-MLA-COOLER-002,2026-04-21,88,5,339950,5.68%,16,67990,3100,conversion con porcentaje
-MLA-BACKPACK-003,2026-04-21,81,3,277470,0.0370,10,92490,1900,conversion en ratio convertida a porcentaje
+Fecha,SKU,Visitas,Ventas,Conversion,Ingresos,Precio,Stock,Notas
+2026-04-20,TERM-INOX-1L,1540,91,5.91%,1728090,18990,26,Post promocion con stock estable
+2026-04-20,MOCH-45L,980,42,4.28%,2939580,69990,16,Seguimiento despues de ajuste de titulo
+2026-04-20,COOLER-24L,720,24,3.33%,1535760,63990,11,Semana con menor pauta

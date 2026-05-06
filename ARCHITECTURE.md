@@ -17,7 +17,19 @@ Preparar una app web real que corra primero en una sola PC, sin hosting obligato
 - `Prisma`
 - `SQLite`
 
-## Decision de esta iteracion
+## Decisiones recientes
+### Hardening y cierre de etapa 1
+Se cerro la etapa 1 sin cambiar el schema ni abrir nuevos modulos:
+
+- validaciones server-side mas explicitas en acciones principales
+- errores redirigidos a mensajes de formulario en lugar de fallas silenciosas o errores crudos de Prisma
+- importador CSV con manejo basico de fallas de red/respuesta invalida
+- seed demo ajustado para incluir snapshots competitivos comparables en una misma busqueda
+- pruebas ampliadas sobre timeline, comparacion de snapshots y oportunidades
+
+La decision es mantener arquitectura simple y local-first: los cambios refuerzan robustez del flujo existente, no agregan capas nuevas.
+
+### Oportunidades operativas
 Se agrego una primera capa usable de oportunidades operativas sin cambiar el modelo de datos:
 
 - reglas puras y testeables para detectar senales

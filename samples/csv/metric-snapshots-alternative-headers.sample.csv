@@ -1,4 +1,4 @@
-publicacion,fecha,visitas,ventas,facturacion,conversion,stock,precio,publicidad,observaciones
-TERM-INOX-1L,22/04/2026,"1.234",19,"740.981","9,3%",35,"38.999","8.600",columnas alternativas con numeros locales
-COOLER-24L,22/04/2026,91,4,271960,"0,044",15,67990,2900,SKU como referencia de publicacion
-Mochila trekking 45L impermeable con cubremochila,22/04/2026,78,3,277470,3.85,9,92490,1800,nombre de publicacion como referencia
+fecha_reporte;external_id;visitas;unidades_vendidas;tasa_conversion;facturacion;precio;stock_disponible;comentarios
+2026-04-21;MLA-TERMICO-001;1610;95;0.059;1804050;18990;24;Headers alternativos por external id
+2026-04-21;MLA-BACKPACK-003;1015;44;0.043;3079560;69990;15;Headers alternativos por external id
+2026-04-21;MLA-COOLER-002;745;26;0.0349;1663740;63990;10;Headers alternativos por external id

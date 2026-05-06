@@ -23,19 +23,31 @@ function getOptionalText(formData: FormData, name: string) {
   return value.length > 0 ? value : null;
 }
 
-function getOptionalNumber(formData: FormData, name: string) {
+function getOptionalNumberField(
+  formData: FormData,
+  name: string,
+  label: string,
+  options: { integer?: boolean; min?: number } = {},
+) {
   const value = getText(formData, name);
   if (!value) {
-    return null;
+    return { value: null, error: null };
   }
 
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
+  if (!Number.isFinite(parsed)) {
+    return { value: null, error: `${label} debe ser un numero valido.` };
+  }
 
-function getOptionalInteger(formData: FormData, name: string) {
-  const parsed = getOptionalNumber(formData, name);
-  return parsed === null ? null : Math.trunc(parsed);
+  if (options.min !== undefined && parsed < options.min) {
+    return { value: null, error: `${label} no puede ser menor que ${options.min}.` };
+  }
+
+  if (options.integer && !Number.isInteger(parsed)) {
+    return { value: null, error: `${label} debe ser un numero entero.` };
+  }
+
+  return { value: parsed, error: null };
 }
 
 function getBoolean(formData: FormData, name: string) {
@@ -55,6 +67,36 @@ function getReturnPath(formData: FormData, fallback: string) {
 function redirectWithError(path: string, message: string): never {
   const separator = path.includes("?") ? "&" : "?";
   redirect(`${path}${separator}error=${encodeURIComponent(message)}`);
+}
+
+async function ensureActiveProject(projectId: string, returnPath: string) {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { id: true, status: true },
+  });
+
+  if (!project) {
+    redirectWithError(returnPath, "No se encontro el proyecto seleccionado.");
+  }
+
+  if (project.status === ProjectStatus.ARCHIVED) {
+    redirectWithError(returnPath, "El proyecto seleccionado esta archivado.");
+  }
+
+  return project;
+}
+
+async function ensureListingExists(listingId: string, returnPath: string) {
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: { id: true },
+  });
+
+  if (!listing) {
+    redirectWithError(returnPath, "No se encontro la publicacion seleccionada.");
+  }
+
+  return listing;
 }
 
 function slugify(value: string) {
@@ -154,6 +196,15 @@ export async function updateProject(formData: FormData) {
     redirectWithError(`/proyectos/${projectId}/editar`, "El nombre del proyecto es obligatorio.");
   }
 
+  const existingProject = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { id: true },
+  });
+
+  if (!existingProject) {
+    redirectWithError("/proyectos", "No se encontro el proyecto a editar.");
+  }
+
   await prisma.project.update({
     where: { id: projectId },
     data: {
@@ -177,10 +228,19 @@ export async function archiveProject(formData: FormData) {
     redirectWithError("/proyectos", "No se encontro el proyecto a archivar.");
   }
 
-  await prisma.project.update({
-    where: { id: projectId },
-    data: { status: ProjectStatus.ARCHIVED },
+  const result = await prisma.project.updateMany({
+    where: {
+      id: projectId,
+      status: { not: ProjectStatus.ARCHIVED },
+    },
+    data: {
+      status: ProjectStatus.ARCHIVED,
+    },
   });
+
+  if (result.count === 0) {
+    redirectWithError("/proyectos", "No se encontro un proyecto activo para archivar.");
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/proyectos");
@@ -197,6 +257,23 @@ export async function createListing(formData: FormData) {
 
   if (!title) {
     redirectWithError("/publicaciones/nueva", "El titulo de la publicacion es obligatorio.");
+  }
+
+  await ensureActiveProject(projectId, "/publicaciones/nueva");
+
+  const currentPrice = getOptionalNumberField(formData, "currentPrice", "El precio actual", {
+    min: 0,
+  });
+  if (currentPrice.error) {
+    redirectWithError("/publicaciones/nueva", currentPrice.error);
+  }
+
+  const availableStock = getOptionalNumberField(formData, "availableStock", "El stock", {
+    integer: true,
+    min: 0,
+  });
+  if (availableStock.error) {
+    redirectWithError("/publicaciones/nueva", availableStock.error);
   }
 
   const externalId = getOptionalText(formData, "externalId");
@@ -224,8 +301,8 @@ export async function createListing(formData: FormData) {
       permalink: getOptionalText(formData, "permalink"),
       categoryName: getOptionalText(formData, "categoryName"),
       brand: getOptionalText(formData, "brand"),
-      currentPrice: getOptionalNumber(formData, "currentPrice"),
-      availableStock: getOptionalInteger(formData, "availableStock"),
+      currentPrice: currentPrice.value,
+      availableStock: availableStock.value,
       notes: getOptionalText(formData, "notes"),
     },
   });
@@ -249,6 +326,24 @@ export async function updateListing(formData: FormData) {
       `/publicaciones/${listingId}/editar`,
       "Proyecto y titulo son obligatorios para guardar la publicacion.",
     );
+  }
+
+  await ensureListingExists(listingId, "/publicaciones");
+  await ensureActiveProject(projectId, `/publicaciones/${listingId}/editar`);
+
+  const currentPrice = getOptionalNumberField(formData, "currentPrice", "El precio actual", {
+    min: 0,
+  });
+  if (currentPrice.error) {
+    redirectWithError(`/publicaciones/${listingId}/editar`, currentPrice.error);
+  }
+
+  const availableStock = getOptionalNumberField(formData, "availableStock", "El stock", {
+    integer: true,
+    min: 0,
+  });
+  if (availableStock.error) {
+    redirectWithError(`/publicaciones/${listingId}/editar`, availableStock.error);
   }
 
   const externalId = getOptionalText(formData, "externalId");
@@ -281,8 +376,8 @@ export async function updateListing(formData: FormData) {
       permalink: getOptionalText(formData, "permalink"),
       categoryName: getOptionalText(formData, "categoryName"),
       brand: getOptionalText(formData, "brand"),
-      currentPrice: getOptionalNumber(formData, "currentPrice"),
-      availableStock: getOptionalInteger(formData, "availableStock"),
+      currentPrice: currentPrice.value,
+      availableStock: availableStock.value,
       notes: getOptionalText(formData, "notes"),
     },
   });
@@ -309,6 +404,8 @@ export async function createChangeEvent(formData: FormData) {
   if (!occurredAt) {
     redirectWithError("/cambios/nuevo", "Indica una fecha valida para el cambio.");
   }
+
+  await ensureListingExists(listingId, "/cambios/nuevo");
 
   const changeEvent = await prisma.changeEvent.create({
     data: {
@@ -347,6 +444,17 @@ export async function updateChangeEvent(formData: FormData) {
     );
   }
 
+  const existingChange = await prisma.changeEvent.findUnique({
+    where: { id: changeEventId },
+    select: { id: true },
+  });
+
+  if (!existingChange) {
+    redirectWithError("/cambios", "No se encontro el cambio a editar.");
+  }
+
+  await ensureListingExists(listingId, `/cambios/${changeEventId}/editar`);
+
   await prisma.changeEvent.update({
     where: { id: changeEventId },
     data: {
@@ -381,6 +489,8 @@ export async function createTrackedSearch(formData: FormData) {
     );
   }
 
+  await ensureActiveProject(projectId, "/competencia/nueva");
+
   const trackedSearch = await prisma.trackedSearch.create({
     data: {
       projectId,
@@ -414,6 +524,17 @@ export async function updateTrackedSearch(formData: FormData) {
     );
   }
 
+  const existingSearch = await prisma.trackedSearch.findUnique({
+    where: { id: trackedSearchId },
+    select: { id: true },
+  });
+
+  if (!existingSearch) {
+    redirectWithError("/competencia", "No se encontro la busqueda a editar.");
+  }
+
+  await ensureActiveProject(projectId, `/competencia/${trackedSearchId}/editar`);
+
   await prisma.trackedSearch.update({
     where: { id: trackedSearchId },
     data: {
@@ -440,6 +561,8 @@ export async function createCompetitor(formData: FormData) {
   if (!projectId || !name) {
     redirectWithError(returnTo, "Proyecto y nombre son obligatorios para crear un competidor.");
   }
+
+  await ensureActiveProject(projectId, returnTo);
 
   const existing = await findCompetitorByName(projectId, name);
 
@@ -473,6 +596,15 @@ export async function createSearchSnapshot(formData: FormData) {
 
   if (!capturedAt) {
     redirectWithError(returnTo, "Indica una fecha valida para el snapshot.");
+  }
+
+  const trackedSearch = await prisma.trackedSearch.findUnique({
+    where: { id: trackedSearchId },
+    select: { id: true },
+  });
+
+  if (!trackedSearch) {
+    redirectWithError("/competencia", "No se encontro la busqueda monitoreada.");
   }
 
   const duplicate = await prisma.searchSnapshot.findUnique({
@@ -524,15 +656,32 @@ export async function createSearchResultItem(formData: FormData) {
     formData,
     `/competencia/${snapshot.trackedSearchId}/snapshots/${snapshot.id}`,
   );
-  const position = getOptionalInteger(formData, "position");
+  const positionField = getOptionalNumberField(formData, "position", "La posicion observada", {
+    integer: true,
+    min: 1,
+  });
   const observedTitle = getText(formData, "observedTitle");
 
-  if (!position || position < 1) {
-    redirectWithError(returnTo, "La posicion observada debe ser un entero mayor a cero.");
+  if (positionField.error || positionField.value === null) {
+    redirectWithError(
+      returnTo,
+      positionField.error ?? "La posicion observada debe ser un entero mayor a cero.",
+    );
   }
 
   if (!observedTitle) {
     redirectWithError(returnTo, "El titulo observado es obligatorio.");
+  }
+
+  const position = positionField.value;
+  const observedPrice = getOptionalNumberField(
+    formData,
+    "observedPrice",
+    "El precio observado",
+    { min: 0 },
+  );
+  if (observedPrice.error) {
+    redirectWithError(returnTo, observedPrice.error);
   }
 
   const positionTaken = await prisma.searchResultItem.findUnique({
@@ -616,7 +765,7 @@ export async function createSearchResultItem(formData: FormData) {
       position,
       externalListingId: getOptionalText(formData, "externalListingId"),
       observedTitle,
-      observedPrice: getOptionalNumber(formData, "observedPrice"),
+      observedPrice: observedPrice.value,
       observedSellerName,
       visibleFlags: getOptionalText(formData, "visibleFlags"),
       isOwnListing: ownerType === "own",
@@ -663,12 +812,16 @@ export async function updateOpportunitySignalStatus(formData: FormData) {
     redirectWithError(returnTo, "No se encontro la senal a actualizar.");
   }
 
-  await prisma.opportunitySignal.update({
+  const result = await prisma.opportunitySignal.updateMany({
     where: { id: opportunitySignalId },
     data: {
       status: coerceOpportunityStatus(getText(formData, "status")),
     },
   });
+
+  if (result.count === 0) {
+    redirectWithError(returnTo, "No se encontro la senal a actualizar.");
+  }
 
   revalidatePath("/oportunidades");
   redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}updated=1`);

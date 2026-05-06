@@ -46,6 +46,7 @@ function test(name, callback) {
 const { suggestMetricMapping } = loadTypeScriptModule("src/lib/csv/metric-mapping.ts");
 const { parseCsv } = loadTypeScriptModule("src/lib/csv/parser.ts");
 const {
+  buildListingMetricSummary,
   buildListingTimeline,
   generateListingHeuristicInsights,
 } = loadTypeScriptModule("src/lib/causal-timeline.ts");
@@ -133,6 +134,47 @@ test("buildListingTimeline combines changes and metric snapshots chronologically
   });
 
   assert.equal(timeline.map((item) => item.kind).join(","), "snapshot,change,snapshot");
+});
+
+test("buildListingMetricSummary calculates first-to-last metric deltas", () => {
+  const summary = buildListingMetricSummary({
+    changes: [],
+    snapshots: [
+      {
+        id: "snapshot-1",
+        snapshotDate: new Date("2026-04-01T00:00:00.000Z"),
+        visits: 100,
+        salesUnits: 5,
+        conversionRate: 5,
+        revenue: 500,
+        availableStock: 20,
+        price: 100,
+        adSpend: 10,
+        notes: null,
+      },
+      {
+        id: "snapshot-2",
+        snapshotDate: new Date("2026-04-08T00:00:00.000Z"),
+        visits: 150,
+        salesUnits: 8,
+        conversionRate: 5.33,
+        revenue: 760,
+        availableStock: 14,
+        price: 95,
+        adSpend: 12,
+        notes: null,
+      },
+    ],
+  });
+
+  const visitsDelta = summary.variations.find((delta) => delta.key === "visits");
+  const stockDelta = summary.variations.find((delta) => delta.key === "availableStock");
+
+  assert.equal(summary.snapshotCount, 2);
+  assert.equal(visitsDelta.absoluteDelta, 50);
+  assert.equal(visitsDelta.direction, "up");
+  assert.equal(stockDelta.absoluteDelta, -6);
+  assert.equal(stockDelta.direction, "down");
 });
 
 test("generateListingHeuristicInsights marks nearby changes as mixed attribution", () => {
@@ -315,6 +357,30 @@ test("compareSearchSnapshots finds new competitors and price changes", () => {
   assert.equal(comparison.priceChanges[0].absoluteDelta, 2000);
 });
 
+test("compareSearchSnapshots finds disappeared competitors", () => {
+  const before = {
+    id: "snapshot-before",
+    capturedAt: new Date("2026-04-20T12:00:00.000Z"),
+    results: [
+      makeSearchResult({ id: "before-1", position: 1, competitorId: "north", seller: "Outdoor North" }),
+      makeSearchResult({ id: "before-2", position: 2, competitorId: "ruta", seller: "Ruta Camping" }),
+    ],
+  };
+  const after = {
+    id: "snapshot-after",
+    capturedAt: new Date("2026-04-27T12:00:00.000Z"),
+    results: [
+      makeSearchResult({ id: "after-1", position: 1, competitorId: "ruta", seller: "Ruta Camping" }),
+      makeSearchResult({ id: "after-2", position: 2, isOwnListing: true, ownListingId: "own-1" }),
+    ],
+  };
+
+  const comparison = compareSearchSnapshots(before, after);
+
+  assert.equal(comparison.disappearedCompetitors.length, 1);
+  assert.equal(comparison.disappearedCompetitors[0].label, "Outdoor North");
+});
+
 test("generateOpportunitySignalCandidates flags absent own presence as high priority", () => {
   const signals = generateOpportunitySignalCandidates({
     now: new Date("2026-05-05T12:00:00.000Z"),
@@ -448,6 +514,67 @@ test("generateOpportunitySignalCandidates flags changes without posterior tracki
   assert.ok(followUpSignal);
   assert.equal(followUpSignal.type, "OTHER");
   assert.equal(followUpSignal.severity, "MEDIUM");
+});
+
+test("generateOpportunitySignalCandidates flags visible competitor exits", () => {
+  const signals = generateOpportunitySignalCandidates({
+    now: new Date("2026-05-05T12:00:00.000Z"),
+    context: makeOpportunityContext({
+      trackedSearches: [
+        makeTrackedSearch({
+          id: "search-exit",
+          snapshots: [
+            {
+              id: "snapshot-before",
+              capturedAt: new Date("2026-05-01T12:00:00.000Z"),
+              results: [
+                makeOpportunitySearchResult({
+                  id: "before-1",
+                  position: 1,
+                  seller: "Outdoor North",
+                  competitorId: "north",
+                  price: 40000,
+                }),
+                makeOpportunitySearchResult({
+                  id: "before-own",
+                  position: 4,
+                  isOwnListing: true,
+                  ownListingId: "listing-1",
+                  price: 42000,
+                }),
+              ],
+            },
+            {
+              id: "snapshot-after",
+              capturedAt: new Date("2026-05-04T12:00:00.000Z"),
+              results: [
+                makeOpportunitySearchResult({
+                  id: "after-own",
+                  position: 2,
+                  isOwnListing: true,
+                  ownListingId: "listing-1",
+                  price: 42000,
+                }),
+                makeOpportunitySearchResult({
+                  id: "after-ruta",
+                  position: 3,
+                  seller: "Ruta Camping",
+                  competitorId: "ruta",
+                  price: 43000,
+                }),
+              ],
+            },
+          ],
+        }),
+      ],
+    }),
+  });
+
+  const exitSignal = signals.find((signal) => signal.ruleId === "search-competitor-exit");
+
+  assert.ok(exitSignal);
+  assert.equal(exitSignal.type, "COMPETITOR_EXIT");
+  assert.equal(exitSignal.severity, "MEDIUM");
 });
 
 function makeSearchResult({
