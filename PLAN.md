@@ -359,6 +359,40 @@ Limites conocidos:
 - la competencia sigue siendo contexto manual, sin scraping ni automatizacion externa
 - la UI queda funcional y coherente para demo, pero pendiente de revision visual manual fina
 
+## Seccion de ayuda operativa
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- agregar una seccion interna de ayuda que funcione como manual de uso de etapa 1
+- explicar que se puede hacer en cada modulo sin convertirlo en documentacion tecnica extensa
+- mantener la ayuda como soporte operativo de la demo local-first
+
+Alcance:
+
+- nueva ruta de ayuda dentro del workspace
+- entrada en la navegacion principal
+- resumen por seccion: objetivo, acciones disponibles, flujo recomendado y limites
+
+Restricciones:
+
+- sin nuevos flujos de producto
+- sin IA, scraping ni automatizaciones
+- sin rediseño visual grande
+
+Resultado logrado:
+
+- nueva ruta `/ayuda` con manual operativo por seccion
+- entrada `Ayuda` agregada a la navegacion principal
+- recorrido recomendado de demo de punta a punta
+- explicacion por modulo de acciones disponibles, flujo sugerido y limites
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `/ayuda` respondio 200 en dev server local
+
 ## Regla de priorizacion
 Si aparece una duda entre construir algo vistoso de competencia o fortalecer causalidad, memoria operativa o carga local de datos:
 

@@ -274,13 +274,14 @@ La deteccion manual de oportunidades puede crear senales adicionales sobre esos 
 
 ## Flujo recomendado para demo local
 1. Abrir `Dashboard` para ver que los datos locales cargaron.
-2. Ir a `Publicaciones` y abrir `Mate termico acero inoxidable 1L pico cebador`.
-3. Revisar resumen de metricas, insights heuristicos y timeline causal.
-4. Entrar a `Cambios` y registrar un cambio nuevo sobre una publicacion.
-5. Ir a `Importaciones` y probar `samples/csv/metric-snapshots.sample.csv`.
-6. Entrar a `Competencia`, abrir una busqueda monitoreada y comparar dos snapshots.
-7. Abrir un snapshot competitivo y cargar un resultado observado manual.
-8. Ir a `Oportunidades`, ejecutar `Detectar senales` y cambiar el estado de una senal.
+2. Abrir `Ayuda` si queres seguir el manual operativo integrado en la app.
+3. Ir a `Publicaciones` y abrir `Mate termico acero inoxidable 1L pico cebador`.
+4. Revisar resumen de metricas, insights heuristicos y timeline causal.
+5. Entrar a `Cambios` y registrar un cambio nuevo sobre una publicacion.
+6. Ir a `Importaciones` y probar `samples/csv/metric-snapshots.sample.csv`.
+7. Entrar a `Competencia`, abrir una busqueda monitoreada y comparar dos snapshots.
+8. Abrir un snapshot competitivo y cargar un resultado observado manual.
+9. Ir a `Oportunidades`, ejecutar `Detectar senales` y cambiar el estado de una senal.
 
 Ese recorrido cubre el objetivo de etapa 1: ver que se toco, que cambio despues en metricas, que contexto competitivo habia y que senales accionables quedan para revisar.
 

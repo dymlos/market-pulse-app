@@ -49,6 +49,12 @@ export const navigationItems: NavigationItem[] = [
     description: "Senales accionables conectadas a cambios propios y contexto cargado.",
   },
   {
+    href: "/ayuda",
+    label: "Ayuda",
+    shortLabel: "Manual",
+    description: "Manual operativo de etapa 1 para recorrer cada flujo de la app.",
+  },
+  {
     href: "/configuracion",
     label: "Configuracion",
     shortLabel: "Config",
