@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ClipboardList, FolderOpen, Package, Search } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/ui/metric-card";
@@ -24,21 +25,29 @@ export default async function DashboardPage() {
           label="Proyectos"
           value={overview.projectCount.toString()}
           detail="Activos o pausados. Los archivados conservan memoria, pero no cuentan aca."
+          href="/proyectos"
+          icon={FolderOpen}
         />
         <MetricCard
           label="Publicaciones"
           value={overview.listingCount.toString()}
           detail="Publicaciones propias disponibles para cambios y snapshots metricos."
+          href="/publicaciones"
+          icon={Package}
         />
         <MetricCard
           label="Cambios recientes"
           value={overview.recentChangeCount.toString()}
           detail="Eventos registrados en los ultimos 14 dias."
+          href="/cambios"
+          icon={ClipboardList}
         />
         <MetricCard
           label="Busquedas"
           value={overview.trackedSearchCount.toString()}
           detail="Busquedas monitoreadas activas como contexto competitivo minimo."
+          href="/competencia"
+          icon={Search}
         />
       </div>
 

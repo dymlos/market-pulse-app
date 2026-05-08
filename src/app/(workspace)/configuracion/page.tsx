@@ -6,9 +6,9 @@ export default function ConfiguracionPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Base tecnica"
-        title="Configuracion"
-        description="Resumen tecnico del scaffold actual para que el siguiente bloque arranque con contexto claro, scripts consistentes y persistencia local ya preparada."
+        eyebrow="Base técnica"
+        title="Configuración"
+        description="Resumen técnico del scaffold actual para que el siguiente bloque arranque con contexto claro, scripts consistentes y persistencia local ya preparada."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
@@ -23,6 +23,19 @@ export default function ConfiguracionPage() {
               ["Estilos", "Tailwind CSS", "Layout claro y consistente"],
               ["Persistencia", "Prisma + SQLite", "Datos locales y esquema simple"],
               ["Runtime", "npm", "Instalacion y scripts verificados"],
+            ]}
+          />
+        </SectionCard>
+
+        <SectionCard
+          title="Entorno local"
+          description="Referencia técnica relegada a configuración para no ensuciar las pantallas operativas."
+        >
+          <DataTablePreview
+            columns={["Dato", "Valor", "Uso"]}
+            rows={[
+              ["Servidor", "localhost:3000", "URL esperada durante la demo local"],
+              ["Persistencia", "SQLite local", "Base local-first de etapa 1"],
             ]}
           />
         </SectionCard>

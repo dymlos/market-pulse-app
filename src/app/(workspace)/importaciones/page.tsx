@@ -1,8 +1,10 @@
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+
 import { CsvMetricImportPanel } from "@/components/imports/csv-metric-import-panel";
+import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
-import { formatDateTime } from "@/lib/format";
+import { firstParam, formatDateTime, type SearchParamsInput } from "@/lib/format";
 import { getCsvImports, getProjectOptions } from "@/lib/market-data";
 import {
   csvImportStatusLabels,
@@ -10,28 +12,77 @@ import {
   csvImportTypeLabels,
 } from "@/lib/market-labels";
 
-export default async function ImportacionesPage() {
-  const [projects, recentImports] = await Promise.all([getProjectOptions(), getCsvImports()]);
+type ImportacionesPageProps = {
+  searchParams?: Promise<SearchParamsInput>;
+};
+
+export default async function ImportacionesPage({ searchParams }: ImportacionesPageProps) {
+  const params = (await searchParams) ?? {};
+  const selectedProjectId = firstParam(params.projectId) || "";
+  const [projects, recentImports] = await Promise.all([
+    getProjectOptions(),
+    getCsvImports(selectedProjectId || undefined),
+  ]);
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Entradas de datos"
         title="Importaciones"
-        description="Carga CSV local para convertir historicos de publicaciones en snapshots metricos reales."
+        description="Carga CSV local para convertir históricos de publicaciones en snapshots métricos reales."
       />
 
       <SectionCard
-        title="Importar metricas de publicaciones"
-        description="Flujo minimo: subir CSV, revisar preview, mapear columnas y guardar snapshots por publicacion."
+        title="Importar métricas de publicaciones"
+        description="Flujo mínimo: subir CSV, revisar preview, mapear columnas y guardar snapshots por publicación."
       >
-        <CsvMetricImportPanel projects={projects} />
+        <CsvMetricImportPanel projects={projects} selectedProjectId={selectedProjectId} />
       </SectionCard>
 
       <SectionCard
         title="Importaciones recientes"
-        description="Registro local guardado en CsvImport para auditar cargas completas, parciales o fallidas."
+        description={
+          selectedProject
+            ? `Registro local filtrado por ${selectedProject.name}.`
+            : "Registro local guardado en CsvImport para auditar cargas completas, parciales o fallidas."
+        }
       >
+        <form className="mb-5 flex flex-col gap-3 rounded-2xl border border-line bg-panel-raised p-4 md:flex-row md:items-end">
+          <div className="flex-1">
+            <label className="text-sm font-semibold text-ink" htmlFor="projectId">
+              Proyecto
+            </label>
+            <select
+              className="mt-2 w-full rounded-2xl border border-line bg-panel px-4 py-3 text-sm text-ink shadow-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/15"
+              defaultValue={selectedProjectId}
+              id="projectId"
+              name="projectId"
+            >
+              <option value="">Todos los proyectos activos</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
+            type="submit"
+          >
+            Filtrar
+          </button>
+          {selectedProjectId ? (
+            <Link
+              className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm font-semibold text-muted transition hover:border-accent hover:text-accent"
+              href="/importaciones"
+            >
+              Limpiar
+            </Link>
+          ) : null}
+        </form>
+
         {recentImports.length > 0 ? (
           <div className="overflow-hidden rounded-2xl border border-line">
             <div className="overflow-x-auto">
@@ -79,7 +130,7 @@ export default async function ImportacionesPage() {
                         </Badge>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
-                        {csvImport.validRows ?? 0} validas / {csvImport.invalidRows ?? 0} invalidas
+                        {csvImport.validRows ?? 0} válidas / {csvImport.invalidRows ?? 0} inválidas
                       </td>
                     </tr>
                   ))}
@@ -89,7 +140,9 @@ export default async function ImportacionesPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-line bg-panel-raised px-4 py-6 text-sm leading-6 text-muted">
-            Todavia no hay importaciones registradas.
+            {selectedProject
+              ? "Todavía no hay importaciones registradas para este proyecto."
+              : "Todavía no hay importaciones registradas."}
           </div>
         )}
       </SectionCard>

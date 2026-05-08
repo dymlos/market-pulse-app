@@ -7,6 +7,13 @@ import {
 import { prisma } from "@/lib/prisma";
 import { compareSearchSnapshots } from "@/lib/search-snapshot-comparison";
 
+type ProjectFilters = {
+  query?: string;
+  status?: ProjectStatus;
+  marketplace?: string;
+  includeArchived?: boolean;
+};
+
 export async function getDashboardOverview() {
   const recentSince = new Date();
   recentSince.setDate(recentSince.getDate() - 14);
@@ -51,17 +58,36 @@ export async function getDashboardOverview() {
   };
 }
 
-export async function getProjects() {
+export async function getProjects(filters: ProjectFilters = {}) {
   return prisma.project.findMany({
+    where: {
+      name: filters.query ? { contains: filters.query } : undefined,
+      status: filters.status
+        ? filters.status
+        : filters.includeArchived
+          ? undefined
+          : { not: ProjectStatus.ARCHIVED },
+      marketplace: filters.marketplace || undefined,
+    },
     include: {
       _count: {
         select: {
           listings: true,
           trackedSearches: true,
+          csvImports: true,
+          opportunitySignals: true,
         },
       },
     },
     orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+  });
+}
+
+export async function getProjectMarketplaceFilters() {
+  return prisma.project.findMany({
+    distinct: ["marketplace"],
+    orderBy: { marketplace: "asc" },
+    select: { marketplace: true },
   });
 }
 
@@ -76,6 +102,71 @@ export async function getProjectForEdit(projectId: string) {
   return prisma.project.findUnique({
     where: { id: projectId },
   });
+}
+
+export async function getProjectDetail(projectId: string) {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      _count: {
+        select: {
+          listings: true,
+          trackedSearches: true,
+          csvImports: true,
+          opportunitySignals: true,
+        },
+      },
+      listings: {
+        include: {
+          _count: {
+            select: {
+              changeEvents: true,
+              metricSnapshots: true,
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+      },
+      trackedSearches: {
+        include: {
+          _count: {
+            select: {
+              snapshots: true,
+            },
+          },
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+      },
+      csvImports: {
+        orderBy: { importedAt: "desc" },
+        take: 5,
+      },
+    },
+  });
+
+  if (!project) {
+    return null;
+  }
+
+  const [changeEventsCount, metricSnapshotsCount, recentChanges] = await Promise.all([
+    prisma.changeEvent.count({ where: { listing: { projectId } } }),
+    prisma.listingMetricSnapshot.count({ where: { listing: { projectId } } }),
+    prisma.changeEvent.findMany({
+      where: { listing: { projectId } },
+      include: { listing: true },
+      orderBy: { occurredAt: "desc" },
+      take: 5,
+    }),
+  ]);
+
+  return {
+    project,
+    changeEventsCount,
+    metricSnapshotsCount,
+    recentChanges,
+  };
 }
 
 export async function getListings(filters: { projectId?: string } = {}) {

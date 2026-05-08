@@ -31,7 +31,7 @@ export default async function EditarProyectoPage({
       <PageHeader
         eyebrow="Editar proyecto"
         title={project.name}
-        description="Actualiza datos basicos sin perder la memoria operativa asociada."
+        description="Ajusta identidad, contexto y configuración operativa sin perder publicaciones, cambios ni imports asociados."
       />
 
       <FormMessage message={firstParam(query.error)} />
@@ -40,12 +40,13 @@ export default async function EditarProyectoPage({
         action={
           <Link
             className="inline-flex rounded-2xl border border-line px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-accent"
-            href="/proyectos"
+            href={`/proyectos/${project.id}`}
           >
             Volver
           </Link>
         }
-        title="Datos del proyecto"
+        title="Identidad y configuración"
+        description="Usa esta edición para corregir nombres, notas o valores de organización. Archivar queda separado como acción de ciclo de vida."
       >
         <ProjectForm action={updateProject} project={project} submitLabel="Guardar cambios" />
       </SectionCard>

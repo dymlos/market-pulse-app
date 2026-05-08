@@ -22,6 +22,44 @@ export function formatDateTime(value: Date) {
   }).format(value);
 }
 
+export function formatRelativeDate(value: Date, reference = new Date()) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const valueStart = new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const referenceStart = new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate(),
+  ).getTime();
+  const diffDays = Math.round((valueStart - referenceStart) / dayMs);
+  const absDays = Math.abs(diffDays);
+
+  if (diffDays === 0) {
+    return "hoy";
+  }
+
+  if (diffDays === -1) {
+    return "ayer";
+  }
+
+  if (diffDays === 1) {
+    return "mañana";
+  }
+
+  if (absDays < 30) {
+    return diffDays < 0 ? `hace ${absDays} días` : `en ${absDays} días`;
+  }
+
+  const months = Math.max(1, Math.round(absDays / 30));
+  if (months < 12) {
+    const label = months === 1 ? "mes" : "meses";
+    return diffDays < 0 ? `hace ${months} ${label}` : `en ${months} ${label}`;
+  }
+
+  const years = Math.max(1, Math.round(months / 12));
+  const label = years === 1 ? "año" : "años";
+  return diffDays < 0 ? `hace ${years} ${label}` : `en ${years} ${label}`;
+}
+
 export function formatCurrency(value: number | null | undefined, currencyCode = "ARS") {
   if (value === null || value === undefined) {
     return "Sin dato";

@@ -10,11 +10,11 @@ type SectionCardProps = PropsWithChildren<{
 
 export function SectionCard({ title, description, eyebrow, action, children }: SectionCardProps) {
   return (
-    <section className="rounded-3xl border border-line bg-panel p-6 shadow-panel">
+    <section className="rounded-2xl border border-line/80 bg-panel/75 p-6 shadow-[0_24px_70px_-48px_rgba(0,0,0,0.95)]">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
           {eyebrow ? (
-            <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-accent">
               {eyebrow}
             </div>
           ) : null}

@@ -19,7 +19,7 @@ export default async function NuevoProyectoPage({ searchParams }: NuevoProyectoP
       <PageHeader
         eyebrow="Nuevo proyecto"
         title="Crear proyecto"
-        description="Carga el espacio de trabajo que va a agrupar publicaciones, cambios y contexto operativo."
+        description="Crea el espacio de trabajo para una marca, seller o cuenta operativa. Después vas a cargar sus publicaciones y empezar la bitácora."
       />
 
       <FormMessage message={firstParam(params.error)} />
@@ -33,7 +33,8 @@ export default async function NuevoProyectoPage({ searchParams }: NuevoProyectoP
             Volver
           </Link>
         }
-        title="Datos del proyecto"
+        title="Identidad y configuración"
+        description="Deja cargados los datos mínimos para que el proyecto quede listo para publicaciones, cambios e imports."
       >
         <ProjectForm action={createProject} submitLabel="Crear proyecto" />
       </SectionCard>

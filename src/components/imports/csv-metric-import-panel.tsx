@@ -63,6 +63,7 @@ type ImportResult = {
 
 type CsvMetricImportPanelProps = {
   projects: ProjectOption[];
+  selectedProjectId?: string;
 };
 
 const inputClass =
@@ -78,8 +79,9 @@ function formatListingOption(listing: ListingOption) {
   return `${listing.title} (${reference})`;
 }
 
-export function CsvMetricImportPanel({ projects }: CsvMetricImportPanelProps) {
-  const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
+export function CsvMetricImportPanel({ projects, selectedProjectId }: CsvMetricImportPanelProps) {
+  const defaultProjectId = selectedProjectId || projects[0]?.id || "";
+  const [projectId, setProjectId] = useState(defaultProjectId);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
   const [mapping, setMapping] = useState<MetricImportMapping>({});

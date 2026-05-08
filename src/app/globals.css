@@ -13,15 +13,18 @@
 }
 
 html {
+  min-height: 100%;
   scroll-behavior: smooth;
+  background: #0e1111;
 }
 
 body {
   min-height: 100vh;
   background:
-    linear-gradient(180deg, rgba(32, 39, 37, 0.72) 0%, rgba(14, 17, 17, 0) 34%),
+    linear-gradient(180deg, rgba(32, 39, 37, 0.88) 0%, rgba(14, 17, 17, 0) 46%),
     #0e1111;
   color: #f2f5f3;
+  font-family: var(--font-manrope);
 }
 
 ::selection {
@@ -33,4 +36,27 @@ input,
 select,
 textarea {
   color-scheme: dark;
+}
+
+option {
+  background: #171b1a;
+  color: #f2f5f3;
+}
+
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090b0b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(170, 180, 175, 0.28);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(192, 132, 87, 0.52);
 }

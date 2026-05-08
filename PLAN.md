@@ -393,6 +393,175 @@ Validacion:
 - `npx tsc --noEmit --incremental false`: correcto
 - `/ayuda` respondio 200 en dev server local
 
+## Ajuste de shell y UI base inspirado en EROSAI
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- corregir la barra lateral para que todos los modulos sean accesibles con scroll
+- tomar inspiracion estructural y visual del proyecto EROSAI sin copiar su dominio ni abrir nuevos frentes
+- mejorar densidad, jerarquia y consistencia del shell para continuar QA manual por secciones
+
+Alcance:
+
+- layout general del workspace
+- navegacion lateral y encabezado superior
+- componentes visuales base compartidos
+- estilos globales de fondo y scroll
+
+Restricciones:
+
+- sin cambios de producto ni datos
+- sin IA, scraping ni automatizaciones
+- mantener la app como herramienta operativa sobria
+
+Resultado logrado:
+
+- sidebar agrupada por `Principal`, `Nucleo causal`, `Contexto` y `Sistema`
+- barra lateral con scroll interno para que todos los modulos sean accesibles en pantallas bajas
+- navegacion mas compacta, inspirada en la estructura de EROSAI
+- top bar separada del sidebar y contenido principal sin ancho maximo artificial
+- paneles base, metric cards, headers y tablas ajustados a una estetica mas densa y consistente
+- scrollbar global estilizado para modo oscuro
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `git diff --check`: correcto
+- `npm run build`: correcto con `HOME` y `USERPROFILE` aislados en `tmp/home`
+- dev server en `http://127.0.0.1:3000`
+- rutas `/dashboard`, `/proyectos`, `/publicaciones`, `/cambios`, `/importaciones`, `/competencia`, `/oportunidades`, `/ayuda` y `/configuracion`: 200
+
+## Dashboard navegable e iconografia operativa
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- hacer que los indicadores del dashboard funcionen como accesos directos a sus secciones
+- sumar iconografia inspirada en EROSAI para mejorar orientacion visual
+- mantener el dashboard como panel operativo, no como dashboard generico pesado
+
+Alcance:
+
+- metric cards del dashboard
+- navegacion lateral
+- dependencia liviana de iconos si hace falta
+
+Restricciones:
+
+- sin cambios de datos ni flujos nuevos
+- sin IA, scraping ni rediseño profundo de paginas internas
+
+Resultado logrado:
+
+- indicadores del dashboard convertidos en links a `/proyectos`, `/publicaciones`, `/cambios` y `/competencia`
+- iconos agregados a los indicadores del dashboard
+- iconos agregados a la navegacion lateral
+- `lucide-react` incorporado como dependencia liviana, siguiendo la referencia de EROSAI
+- dev server reiniciado limpio despues del build para evitar chunks mezclados de Next
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `git diff --check`: correcto
+- `npm run build`: correcto con `HOME` y `USERPROFILE` aislados en `tmp/home`
+- rutas `/dashboard`, `/proyectos`, `/publicaciones`, `/cambios` y `/competencia`: 200 despues de reiniciar dev server
+
+## Ajustes UX en Proyectos
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- corregir detalles detectados durante la revision manual de `Proyectos`
+- mejorar claridad de formulario, labels, feedback y acciones sensibles
+- mantener la seccion como base organizativa del MVP
+
+Alcance:
+
+- pagina `/proyectos`
+- paginas de crear/editar proyecto
+- formulario de proyecto
+- mensaje contextual del header superior
+
+Restricciones:
+
+- sin cambios de datos ni arquitectura
+- sin abrir nuevos modulos
+- sin rediseño profundo fuera de la correccion detectada
+
+Resultado logrado:
+
+- placeholder de nombre reemplazado por ejemplo generico
+- marketplace mostrado como label legible (`Mercado Libre`) en listado y formulario
+- mensaje de exito agregado para creacion, actualizacion y archivado
+- header superior ahora usa descripcion contextual de la seccion activa
+- formulario de proyecto limitado a un ancho operativo en desktop
+- boton de archivado con tono de advertencia y copy mas explicito
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `git diff --check`: correcto
+- `npm run build`: correcto con `HOME` y `USERPROFILE` aislados en `tmp/home`
+- dev server reiniciado limpio en `http://127.0.0.1:3000`
+- rutas `/proyectos`, `/proyectos?updated=1`, `/proyectos/nuevo`, `/proyectos/[id]/editar` y `/dashboard`: 200
+
+## Refinamiento integral del modulo Proyectos
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- cerrar el modulo `Proyectos` como una seccion de producto mas clara, navegable y consistente
+- aclarar el concepto de proyecto como espacio de trabajo para marca, seller o cuenta operativa
+- reducir friccion en alta/edicion sin cambiar el modelo de datos
+- mejorar listado, filtros, acciones, estados vacios y ciclo de vida
+
+Alcance:
+
+- copy visible de `/proyectos`, alta, edicion y detalle
+- formulario de proyecto
+- listado con busqueda y filtros simples
+- navegacion hacia una vista de contexto del proyecto
+- confirmacion de archivado y feedback de acciones
+
+Restricciones:
+
+- sin IA
+- sin scraping
+- sin nuevos modulos
+- sin migraciones salvo necesidad real
+- sin redisenar el sistema completo
+
+Resultado logrado:
+
+- copy del modulo ajustado para explicar `Proyecto` como espacio de trabajo de marca, seller o cuenta operativa
+- formulario de alta/edicion reorganizado en identidad/contexto y configuracion operativa
+- marketplace, moneda y estado con defaults razonables
+- moneda convertida en select controlado
+- estado `Archivado` bloqueado en alta y mantenido como estado posterior de ciclo de vida
+- validacion server-side mas clara para nombre obligatorio y nombre demasiado corto
+- alta redirige al detalle del proyecto para dejar un siguiente paso util
+- listado con busqueda por nombre, filtro por estado y filtro por marketplace
+- filas enriquecidas con publicaciones, busquedas monitoreadas, imports y fecha relativa + exacta
+- proyecto navegable por nombre y accion principal `Abrir`
+- acciones secundarias movidas a menu simple
+- archivado con confirmacion y copy que aclara que conserva memoria
+- nueva vista de detalle del proyecto con identidad, conteos, actividad reciente y ciclo de vida
+- indicadores tecnicos del header relegados a `Configuracion local`
+
+Validacion:
+
+- `npm test`: correcto
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `npm run build`: correcto con `HOME` y `USERPROFILE` aislados en `tmp/home`
+- `npm run db:reset` + `npm run db:seed`: correctos contra `tmp/proyectos-validation.db`
+- rutas `/proyectos`, `/proyectos?q=Tienda`, `/proyectos?status=ARCHIVED`, `/proyectos/nuevo`, `/proyectos/[id]`, `/proyectos/[id]/editar` y `/publicaciones?projectId=[id]`: 200
+- navegador interno: validado listado, filtros, alta sin opcion `Archivado`, edicion con moneda controlada y detalle del proyecto
+
 ## Regla de priorizacion
 Si aparece una duda entre construir algo vistoso de competencia o fortalecer causalidad, memoria operativa o carga local de datos:
 

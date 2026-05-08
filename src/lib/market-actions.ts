@@ -10,6 +10,7 @@ import {
   ProjectStatus,
   SearchSnapshotSource,
 } from "@/generated/prisma";
+import { currencyOptions } from "@/lib/market-labels";
 import { detectAndPersistOpportunitySignals } from "@/lib/opportunity-service";
 import { prisma } from "@/lib/prisma";
 
@@ -80,7 +81,7 @@ async function ensureActiveProject(projectId: string, returnPath: string) {
   }
 
   if (project.status === ProjectStatus.ARCHIVED) {
-    redirectWithError(returnPath, "El proyecto seleccionado esta archivado.");
+    redirectWithError(returnPath, "El proyecto seleccionado está archivado.");
   }
 
   return project;
@@ -128,6 +129,24 @@ function coerceProjectStatus(value: string) {
     : ProjectStatus.ACTIVE;
 }
 
+function coerceProjectCreationStatus(value: string, returnPath: string) {
+  const status = coerceProjectStatus(value);
+
+  if (status === ProjectStatus.ARCHIVED) {
+    redirectWithError(returnPath, "Un proyecto nuevo no puede crearse archivado.");
+  }
+
+  return status;
+}
+
+function coerceCurrencyCode(value: string) {
+  const currencyCode = value || "ARS";
+  const isKnownCurrency = currencyOptions.some((option) => option.value === currencyCode);
+  const isIsoLikeCode = /^[A-Z]{3}$/.test(currencyCode);
+
+  return isKnownCurrency || isIsoLikeCode ? currencyCode : "ARS";
+}
+
 function coerceListingStatus(value: string) {
   return Object.values(ListingStatus).includes(value as ListingStatus)
     ? (value as ListingStatus)
@@ -163,9 +182,14 @@ function parseOccurredAt(value: string) {
 
 export async function createProject(formData: FormData) {
   const name = getText(formData, "name");
+  const returnPath = "/proyectos/nuevo";
 
   if (!name) {
-    redirectWithError("/proyectos/nuevo", "El nombre del proyecto es obligatorio.");
+    redirectWithError(returnPath, "El nombre del proyecto es obligatorio.");
+  }
+
+  if (name.length < 2) {
+    redirectWithError(returnPath, "El nombre del proyecto debe tener al menos 2 caracteres.");
   }
 
   const project = await prisma.project.create({
@@ -173,15 +197,16 @@ export async function createProject(formData: FormData) {
       name,
       slug: await buildUniqueProjectSlug(name),
       marketplace: getText(formData, "marketplace") || "mercado-libre",
-      currencyCode: getText(formData, "currencyCode") || "ARS",
-      status: coerceProjectStatus(getText(formData, "status")),
+      currencyCode: coerceCurrencyCode(getText(formData, "currencyCode")),
+      status: coerceProjectCreationStatus(getText(formData, "status"), returnPath),
       notes: getOptionalText(formData, "notes"),
     },
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/proyectos");
-  redirect(`/proyectos?created=${project.id}`);
+  revalidatePath(`/proyectos/${project.id}`);
+  redirect(`/proyectos/${project.id}?created=1`);
 }
 
 export async function updateProject(formData: FormData) {
@@ -189,11 +214,18 @@ export async function updateProject(formData: FormData) {
   const name = getText(formData, "name");
 
   if (!projectId) {
-    redirectWithError("/proyectos", "No se encontro el proyecto a editar.");
+    redirectWithError("/proyectos", "No se encontró el proyecto a editar.");
   }
 
   if (!name) {
     redirectWithError(`/proyectos/${projectId}/editar`, "El nombre del proyecto es obligatorio.");
+  }
+
+  if (name.length < 2) {
+    redirectWithError(
+      `/proyectos/${projectId}/editar`,
+      "El nombre del proyecto debe tener al menos 2 caracteres.",
+    );
   }
 
   const existingProject = await prisma.project.findUnique({
@@ -202,7 +234,7 @@ export async function updateProject(formData: FormData) {
   });
 
   if (!existingProject) {
-    redirectWithError("/proyectos", "No se encontro el proyecto a editar.");
+    redirectWithError("/proyectos", "No se encontró el proyecto a editar.");
   }
 
   await prisma.project.update({
@@ -210,7 +242,7 @@ export async function updateProject(formData: FormData) {
     data: {
       name,
       marketplace: getText(formData, "marketplace") || "mercado-libre",
-      currencyCode: getText(formData, "currencyCode") || "ARS",
+      currencyCode: coerceCurrencyCode(getText(formData, "currencyCode")),
       status: coerceProjectStatus(getText(formData, "status")),
       notes: getOptionalText(formData, "notes"),
     },
@@ -218,14 +250,16 @@ export async function updateProject(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/proyectos");
-  redirect("/proyectos?updated=1");
+  revalidatePath(`/proyectos/${projectId}`);
+  redirect(`/proyectos/${projectId}?updated=1`);
 }
 
 export async function archiveProject(formData: FormData) {
   const projectId = getText(formData, "projectId");
+  const returnTo = getReturnPath(formData, "/proyectos");
 
   if (!projectId) {
-    redirectWithError("/proyectos", "No se encontro el proyecto a archivar.");
+    redirectWithError(returnTo, "No se encontró el proyecto a archivar.");
   }
 
   const result = await prisma.project.updateMany({
@@ -239,12 +273,13 @@ export async function archiveProject(formData: FormData) {
   });
 
   if (result.count === 0) {
-    redirectWithError("/proyectos", "No se encontro un proyecto activo para archivar.");
+    redirectWithError(returnTo, "No se encontró un proyecto activo para archivar.");
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/proyectos");
-  redirect("/proyectos?archived=1");
+  revalidatePath(`/proyectos/${projectId}`);
+  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}archived=1`);
 }
 
 export async function createListing(formData: FormData) {
