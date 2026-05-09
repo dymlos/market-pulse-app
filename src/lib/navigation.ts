@@ -37,10 +37,10 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     href: "/importaciones",
-    label: "Importaciones",
-    shortLabel: "Importaciones",
+    label: "Carga de datos",
+    shortLabel: "Datos",
     group: "Nucleo causal",
-    description: "Punto de entrada para CSV y cargas manuales sin depender de APIs externas.",
+    description: "Entrada local para CSV de metricas que alimentan publicaciones y timeline.",
   },
   {
     href: "/competencia",

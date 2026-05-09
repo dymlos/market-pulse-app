@@ -70,10 +70,28 @@ function redirectWithError(path: string, message: string): never {
   redirect(`${path}${separator}error=${encodeURIComponent(message)}`);
 }
 
+function getOptionalUrlField(formData: FormData, name: string, label: string, returnPath: string) {
+  const value = getOptionalText(formData, name);
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      redirectWithError(returnPath, `${label} debe ser una URL http o https.`);
+    }
+  } catch {
+    redirectWithError(returnPath, `${label} debe ser una URL valida.`);
+  }
+
+  return value;
+}
+
 async function ensureActiveProject(projectId: string, returnPath: string) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, marketplace: true },
   });
 
   if (!project) {
@@ -180,6 +198,71 @@ function parseOccurredAt(value: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+const CHANGE_DETAIL_MIN_LENGTH = 8;
+const CHANGE_TYPES_WITH_BEFORE_AFTER = new Set<ChangeEventType>([
+  ChangeEventType.PRICE_UPDATE,
+  ChangeEventType.STOCK_UPDATE,
+  ChangeEventType.TITLE_UPDATE,
+  ChangeEventType.DESCRIPTION_UPDATE,
+  ChangeEventType.PROMOTION_UPDATE,
+  ChangeEventType.SHIPPING_UPDATE,
+  ChangeEventType.CATALOG_UPDATE,
+  ChangeEventType.STATUS_UPDATE,
+]);
+
+function buildChangeFormPath(listingId?: string | null) {
+  return listingId
+    ? `/cambios/nuevo?listingId=${encodeURIComponent(listingId)}`
+    : "/cambios/nuevo";
+}
+
+function appendQueryParam(path: string, key: string, value: string) {
+  const hashIndex = path.indexOf("#");
+  const base = hashIndex >= 0 ? path.slice(0, hashIndex) : path;
+  const hash = hashIndex >= 0 ? path.slice(hashIndex) : "";
+  const separator = base.includes("?") ? "&" : "?";
+
+  return `${base}${separator}${key}=${encodeURIComponent(value)}${hash}`;
+}
+
+function validateChangeEventFields(input: {
+  detail: string;
+  occurredAt: Date | null;
+  type: ChangeEventType;
+  previousValue: string | null;
+  newValue: string | null;
+  returnPath: string;
+}) {
+  if (!input.detail) {
+    redirectWithError(input.returnPath, "La descripcion del cambio es obligatoria.");
+  }
+
+  if (input.detail.length < CHANGE_DETAIL_MIN_LENGTH) {
+    redirectWithError(
+      input.returnPath,
+      `La descripcion del cambio debe tener al menos ${CHANGE_DETAIL_MIN_LENGTH} caracteres.`,
+    );
+  }
+
+  if (!input.occurredAt) {
+    redirectWithError(input.returnPath, "Indica una fecha valida para el cambio.");
+  }
+
+  if (input.occurredAt.getTime() > Date.now()) {
+    redirectWithError(input.returnPath, "La fecha del cambio no puede estar en el futuro.");
+  }
+
+  if (
+    CHANGE_TYPES_WITH_BEFORE_AFTER.has(input.type) &&
+    Boolean(input.previousValue) !== Boolean(input.newValue)
+  ) {
+    redirectWithError(
+      input.returnPath,
+      "Si cargas antes/despues para este tipo de cambio, completa ambos valores.",
+    );
+  }
+}
+
 export async function createProject(formData: FormData) {
   const name = getText(formData, "name");
   const returnPath = "/proyectos/nuevo";
@@ -230,11 +313,23 @@ export async function updateProject(formData: FormData) {
 
   const existingProject = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { id: true },
+    select: { id: true, status: true },
   });
 
   if (!existingProject) {
     redirectWithError("/proyectos", "No se encontró el proyecto a editar.");
+  }
+
+  const nextStatus = coerceProjectStatus(getText(formData, "status"));
+
+  if (
+    nextStatus === ProjectStatus.ARCHIVED &&
+    existingProject.status !== ProjectStatus.ARCHIVED
+  ) {
+    redirectWithError(
+      `/proyectos/${projectId}/editar`,
+      "Para archivar el proyecto, usá la acción Archivar con confirmación.",
+    );
   }
 
   await prisma.project.update({
@@ -243,7 +338,7 @@ export async function updateProject(formData: FormData) {
       name,
       marketplace: getText(formData, "marketplace") || "mercado-libre",
       currencyCode: coerceCurrencyCode(getText(formData, "currencyCode")),
-      status: coerceProjectStatus(getText(formData, "status")),
+      status: nextStatus,
       notes: getOptionalText(formData, "notes"),
     },
   });
@@ -285,22 +380,25 @@ export async function archiveProject(formData: FormData) {
 export async function createListing(formData: FormData) {
   const projectId = getText(formData, "projectId");
   const title = getText(formData, "title");
+  const returnPath = projectId
+    ? `/publicaciones/nueva?projectId=${encodeURIComponent(projectId)}`
+    : "/publicaciones/nueva";
 
   if (!projectId) {
-    redirectWithError("/publicaciones/nueva", "Selecciona un proyecto para la publicacion.");
+    redirectWithError(returnPath, "Selecciona un proyecto para la publicacion.");
   }
 
   if (!title) {
-    redirectWithError("/publicaciones/nueva", "El titulo de la publicacion es obligatorio.");
+    redirectWithError(returnPath, "El titulo de la publicacion es obligatorio.");
   }
 
-  await ensureActiveProject(projectId, "/publicaciones/nueva");
+  const project = await ensureActiveProject(projectId, returnPath);
 
   const currentPrice = getOptionalNumberField(formData, "currentPrice", "El precio actual", {
     min: 0,
   });
   if (currentPrice.error) {
-    redirectWithError("/publicaciones/nueva", currentPrice.error);
+    redirectWithError(returnPath, currentPrice.error);
   }
 
   const availableStock = getOptionalNumberField(formData, "availableStock", "El stock", {
@@ -308,8 +406,10 @@ export async function createListing(formData: FormData) {
     min: 0,
   });
   if (availableStock.error) {
-    redirectWithError("/publicaciones/nueva", availableStock.error);
+    redirectWithError(returnPath, availableStock.error);
   }
+
+  const permalink = getOptionalUrlField(formData, "permalink", "El link", returnPath);
 
   const externalId = getOptionalText(formData, "externalId");
   if (externalId) {
@@ -319,7 +419,7 @@ export async function createListing(formData: FormData) {
 
     if (duplicated) {
       redirectWithError(
-        "/publicaciones/nueva",
+        returnPath,
         "Ya existe una publicacion con ese ID externo dentro del proyecto.",
       );
     }
@@ -332,8 +432,8 @@ export async function createListing(formData: FormData) {
       externalId,
       sku: getOptionalText(formData, "sku"),
       status: coerceListingStatus(getText(formData, "status")),
-      marketplace: getText(formData, "marketplace") || "mercado-libre",
-      permalink: getOptionalText(formData, "permalink"),
+      marketplace: project.marketplace,
+      permalink,
       categoryName: getOptionalText(formData, "categoryName"),
       brand: getOptionalText(formData, "brand"),
       currentPrice: currentPrice.value,
@@ -344,13 +444,14 @@ export async function createListing(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/publicaciones");
-  redirect(`/publicaciones/${listing.id}`);
+  redirect(`/publicaciones/${listing.id}?created=1`);
 }
 
 export async function updateListing(formData: FormData) {
   const listingId = getText(formData, "listingId");
   const projectId = getText(formData, "projectId");
   const title = getText(formData, "title");
+  const returnPath = listingId ? `/publicaciones/${listingId}/editar` : "/publicaciones";
 
   if (!listingId) {
     redirectWithError("/publicaciones", "No se encontro la publicacion a editar.");
@@ -358,19 +459,19 @@ export async function updateListing(formData: FormData) {
 
   if (!projectId || !title) {
     redirectWithError(
-      `/publicaciones/${listingId}/editar`,
+      returnPath,
       "Proyecto y titulo son obligatorios para guardar la publicacion.",
     );
   }
 
   await ensureListingExists(listingId, "/publicaciones");
-  await ensureActiveProject(projectId, `/publicaciones/${listingId}/editar`);
+  const project = await ensureActiveProject(projectId, returnPath);
 
   const currentPrice = getOptionalNumberField(formData, "currentPrice", "El precio actual", {
     min: 0,
   });
   if (currentPrice.error) {
-    redirectWithError(`/publicaciones/${listingId}/editar`, currentPrice.error);
+    redirectWithError(returnPath, currentPrice.error);
   }
 
   const availableStock = getOptionalNumberField(formData, "availableStock", "El stock", {
@@ -378,8 +479,10 @@ export async function updateListing(formData: FormData) {
     min: 0,
   });
   if (availableStock.error) {
-    redirectWithError(`/publicaciones/${listingId}/editar`, availableStock.error);
+    redirectWithError(returnPath, availableStock.error);
   }
+
+  const permalink = getOptionalUrlField(formData, "permalink", "El link", returnPath);
 
   const externalId = getOptionalText(formData, "externalId");
   if (externalId) {
@@ -393,7 +496,7 @@ export async function updateListing(formData: FormData) {
 
     if (duplicated) {
       redirectWithError(
-        `/publicaciones/${listingId}/editar`,
+        returnPath,
         "Ya existe otra publicacion con ese ID externo dentro del proyecto.",
       );
     }
@@ -407,8 +510,8 @@ export async function updateListing(formData: FormData) {
       externalId,
       sku: getOptionalText(formData, "sku"),
       status: coerceListingStatus(getText(formData, "status")),
-      marketplace: getText(formData, "marketplace") || "mercado-libre",
-      permalink: getOptionalText(formData, "permalink"),
+      marketplace: project.marketplace,
+      permalink,
       categoryName: getOptionalText(formData, "categoryName"),
       brand: getOptionalText(formData, "brand"),
       currentPrice: currentPrice.value,
@@ -420,36 +523,45 @@ export async function updateListing(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/publicaciones");
   revalidatePath(`/publicaciones/${listingId}`);
-  redirect(`/publicaciones/${listingId}`);
+  redirect(`/publicaciones/${listingId}?updated=1`);
 }
 
 export async function createChangeEvent(formData: FormData) {
   const listingId = getText(formData, "listingId");
   const detail = getText(formData, "detail");
   const occurredAt = parseOccurredAt(getText(formData, "occurredAt"));
+  const type = coerceChangeEventType(getText(formData, "type"));
+  const previousValue = getOptionalText(formData, "previousValue");
+  const newValue = getOptionalText(formData, "newValue");
+  const returnPath = buildChangeFormPath(listingId);
+  const returnTo = getReturnPath(formData, "");
 
   if (!listingId) {
-    redirectWithError("/cambios/nuevo", "Selecciona una publicacion para registrar el cambio.");
+    redirectWithError(returnPath, "Selecciona una publicacion para registrar el cambio.");
   }
 
-  if (!detail) {
-    redirectWithError("/cambios/nuevo", "La descripcion del cambio es obligatoria.");
-  }
-
+  validateChangeEventFields({
+    detail,
+    occurredAt,
+    type,
+    previousValue,
+    newValue,
+    returnPath,
+  });
   if (!occurredAt) {
-    redirectWithError("/cambios/nuevo", "Indica una fecha valida para el cambio.");
+    redirectWithError(returnPath, "Indica una fecha valida para el cambio.");
   }
 
-  await ensureListingExists(listingId, "/cambios/nuevo");
+  await ensureListingExists(listingId, returnPath);
 
   const changeEvent = await prisma.changeEvent.create({
     data: {
       listingId,
       occurredAt,
-      type: coerceChangeEventType(getText(formData, "type")),
+      type,
       detail,
-      previousValue: getOptionalText(formData, "previousValue"),
-      newValue: getOptionalText(formData, "newValue"),
+      previousValue,
+      newValue,
       comment: getOptionalText(formData, "comment"),
       actorName: getOptionalText(formData, "actorName"),
       hypothesis: getOptionalText(formData, "hypothesis"),
@@ -459,6 +571,11 @@ export async function createChangeEvent(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/cambios");
   revalidatePath(`/publicaciones/${listingId}`);
+
+  if (returnTo) {
+    redirect(appendQueryParam(returnTo, "change", "created"));
+  }
+
   redirect(`/cambios/${changeEvent.id}`);
 }
 
@@ -467,21 +584,34 @@ export async function updateChangeEvent(formData: FormData) {
   const listingId = getText(formData, "listingId");
   const detail = getText(formData, "detail");
   const occurredAt = parseOccurredAt(getText(formData, "occurredAt"));
+  const type = coerceChangeEventType(getText(formData, "type"));
+  const previousValue = getOptionalText(formData, "previousValue");
+  const newValue = getOptionalText(formData, "newValue");
+  const returnPath = changeEventId ? `/cambios/${changeEventId}/editar` : "/cambios";
 
   if (!changeEventId) {
     redirectWithError("/cambios", "No se encontro el cambio a editar.");
   }
 
-  if (!listingId || !detail || !occurredAt) {
-    redirectWithError(
-      `/cambios/${changeEventId}/editar`,
-      "Publicacion, descripcion y fecha son obligatorias.",
-    );
+  if (!listingId) {
+    redirectWithError(returnPath, "Selecciona una publicacion para guardar el cambio.");
+  }
+
+  validateChangeEventFields({
+    detail,
+    occurredAt,
+    type,
+    previousValue,
+    newValue,
+    returnPath,
+  });
+  if (!occurredAt) {
+    redirectWithError(returnPath, "Indica una fecha valida para el cambio.");
   }
 
   const existingChange = await prisma.changeEvent.findUnique({
     where: { id: changeEventId },
-    select: { id: true },
+    select: { id: true, listingId: true },
   });
 
   if (!existingChange) {
@@ -495,10 +625,10 @@ export async function updateChangeEvent(formData: FormData) {
     data: {
       listingId,
       occurredAt,
-      type: coerceChangeEventType(getText(formData, "type")),
+      type,
       detail,
-      previousValue: getOptionalText(formData, "previousValue"),
-      newValue: getOptionalText(formData, "newValue"),
+      previousValue,
+      newValue,
       comment: getOptionalText(formData, "comment"),
       actorName: getOptionalText(formData, "actorName"),
       hypothesis: getOptionalText(formData, "hypothesis"),
@@ -508,6 +638,9 @@ export async function updateChangeEvent(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/cambios");
   revalidatePath(`/cambios/${changeEventId}`);
+  if (existingChange.listingId !== listingId) {
+    revalidatePath(`/publicaciones/${existingChange.listingId}`);
+  }
   revalidatePath(`/publicaciones/${listingId}`);
   redirect(`/cambios/${changeEventId}`);
 }

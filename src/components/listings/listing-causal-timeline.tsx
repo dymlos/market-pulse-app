@@ -24,53 +24,58 @@ export function ListingCausalTimeline({ items, currencyCode }: ListingCausalTime
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-line text-left">
-          <thead className="bg-panel-raised">
-            <tr>
-              <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                Fecha
-              </th>
-              <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                Tipo
-              </th>
-              <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                Lectura
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line bg-panel">
-            {items.map((item) => (
-              <tr key={`${item.kind}-${item.id}`}>
-                <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
-                  {item.kind === "change" ? formatDateTime(item.date) : formatDate(item.date)}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm">
-                  {item.kind === "change" ? (
-                    <div className="flex flex-col gap-2">
-                      <Badge>Cambio manual</Badge>
-                      <span className="text-xs text-muted">
-                        {changeEventTypeLabels[item.eventType as keyof typeof changeEventTypeLabels] ??
-                          item.eventType}
-                      </span>
-                    </div>
-                  ) : (
-                    <Badge tone="muted">Snapshot metrico</Badge>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-sm text-ink">
-                  {item.kind === "change" ? (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-line bg-panel-raised px-4 py-3 text-xs leading-5 text-muted">
+        <Badge>Cambio manual</Badge>
+        <span>Accion propia registrada por el equipo.</span>
+        <Badge tone="muted">Snapshot metrico</Badge>
+        <span>Dato observado que ayuda a leer el antes y despues.</span>
+      </div>
+
+      <ol className="space-y-3">
+        {items.map((item) => {
+          const isChange = item.kind === "change";
+          return (
+            <li
+              key={`${item.kind}-${item.id}`}
+              className={[
+                "rounded-2xl border px-4 py-4",
+                isChange
+                  ? "border-accent/45 bg-accent/10"
+                  : "border-line bg-panel-raised",
+              ].join(" ")}
+            >
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                    {isChange ? formatDateTime(item.date) : formatDate(item.date)}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {isChange ? (
+                      <>
+                        <Badge>Cambio manual</Badge>
+                        <Badge tone="muted">
+                          {changeEventTypeLabels[item.eventType as keyof typeof changeEventTypeLabels] ??
+                            item.eventType}
+                        </Badge>
+                      </>
+                    ) : (
+                      <Badge tone="muted">Snapshot metrico</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1 text-sm text-ink md:max-w-[72%]">
+                  {isChange ? (
                     <ChangeTimelineContent item={item} />
                   ) : (
                     <SnapshotTimelineContent item={item} currencyCode={currencyCode} />
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

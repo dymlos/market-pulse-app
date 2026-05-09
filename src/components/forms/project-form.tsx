@@ -33,7 +33,8 @@ const fieldsetClass = "rounded-2xl border border-line/80 bg-shell/40 p-5";
 export function ProjectForm({ action, project, submitLabel }: ProjectFormProps) {
   const selectedMarketplace = project?.marketplace ?? "mercado-libre";
   const selectedCurrency = project?.currencyCode ?? "ARS";
-  const statusOptions = project?.id ? projectStatusOptions : projectCreationStatusOptions;
+  const statusOptions =
+    project?.status === ProjectStatus.ARCHIVED ? projectStatusOptions : projectCreationStatusOptions;
   const includesCurrentMarketplace = marketplaceOptions.some(
     (option) => option.value === selectedMarketplace,
   );
@@ -175,7 +176,9 @@ export function ProjectForm({ action, project, submitLabel }: ProjectFormProps) 
             </select>
             <p className={helperClass} id="status-help">
               Activo entra al flujo normal. Pausado conserva memoria sin tratarlo como foco actual.
-              {project?.id ? " Archivado queda disponible como estado histórico." : " Para archivar, usa la acción de ciclo de vida después de crearlo."}
+              {project?.status === ProjectStatus.ARCHIVED
+                ? " Si vuelve a estar activo, podés devolverlo al flujo desde acá."
+                : " Para archivar, usá la acción de ciclo de vida con confirmación."}
             </p>
           </div>
         </div>

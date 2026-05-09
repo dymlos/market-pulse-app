@@ -42,7 +42,7 @@ La app incluye paginas base para:
 - Proyectos
 - Publicaciones
 - Cambios
-- Importaciones
+- Carga de datos (`/importaciones`)
 - Competencia
 - Oportunidades
 - Configuracion
@@ -154,8 +154,8 @@ Si venis de una base anterior del scaffold sin historial de migraciones, convien
 - `npm run db:reset`
 - `npm run db:seed`
 
-## Importacion CSV de metricas
-La pantalla `Importaciones` permite cargar snapshots historicos de publicaciones desde CSV y guardarlos como `ListingMetricSnapshot`.
+## Carga de datos / importacion CSV de metricas
+La pantalla `Carga de datos` (`/importaciones`) permite cargar snapshots historicos de publicaciones desde CSV y guardarlos como `ListingMetricSnapshot`. Su funcion es alimentar Publicaciones, Cambios, timeline causal e insights con evidencia local antes/despues.
 
 Flujo soportado:
 
@@ -165,7 +165,7 @@ Flujo soportado:
 4. Revisar o ajustar mapping de columnas.
 5. Resolver publicaciones no encontradas o permitir crearlas.
 6. Importar snapshots validos.
-7. Registrar el resultado en `CsvImport`.
+7. Revisar publicaciones afectadas, filas observadas e historial de cargas.
 
 Campos soportados:
 
@@ -182,11 +182,60 @@ Campos soportados:
 
 El parser acepta separadores `,`, `;` y tab, comillas CSV, headers alternativos, fechas ISO o `dd/mm/yyyy`, numeros con coma o punto y conversion en ratio o porcentaje.
 
+La creacion de publicaciones faltantes es opt-in y crea registros minimos para guardar snapshots. Conviene completar esos datos despues desde `Publicaciones`.
+
 Samples utiles:
 
 - `samples/csv/metric-snapshots.sample.csv`
 - `samples/csv/metric-snapshots-alternative-headers.sample.csv`
 - `samples/csv/metric-snapshots-invalid.sample.csv`
+
+## Proyectos
+La pantalla `Proyectos` funciona como base organizativa de la etapa 1. Un proyecto representa una marca, seller o cuenta operativa.
+
+Flujo soportado:
+
+1. Crear un proyecto con marketplace, moneda, estado operativo y contexto.
+2. Abrir el detalle del proyecto para revisar identidad, publicaciones, cambios, busquedas e imports conectados.
+3. Ir desde los contadores o accesos rapidos a publicaciones, competencia o importaciones filtradas por proyecto.
+4. Editar datos basicos sin perder memoria asociada.
+5. Archivar el proyecto desde una accion separada con confirmacion. Archivar no elimina publicaciones, cambios ni imports.
+
+El estado `Archivado` existe como ciclo de vida posterior: no se puede elegir al crear un proyecto ni usar como atajo normal de edicion en proyectos activos.
+
+## Publicaciones
+La pantalla `Publicaciones` es la unidad de analisis operativo. No funciona como inventario generico: cada publicacion concentra cambios propios, snapshots metricos, timeline causal e insights heuristicos prudentes.
+
+Flujo soportado:
+
+1. Buscar publicaciones por titulo, SKU o ID externo.
+2. Filtrar por proyecto, estado, estado de seguimiento y stock.
+3. Revisar desde el listado si la publicacion tiene seguimiento activo, cambio sin snapshot posterior, datos desactualizados o falta de metricas.
+4. Abrir el analisis para ver resumen operativo, ultimos cambios, resumen de metricas, insights y timeline causal.
+5. Registrar un cambio operativo desde la fila o desde el detalle.
+6. Ir a importaciones filtradas por proyecto cuando falten snapshots metricos.
+7. Editar datos de referencia sin confundirlos con la bitacora de cambios.
+
+El detalle de publicacion compara el primer snapshot visible contra el ultimo snapshot cargado. Esa variacion es descriptiva: ayuda a orientar la lectura, pero no prueba causalidad. Para una lectura defendible conviene tener cambios registrados y snapshots antes/despues.
+
+Los formularios de publicacion separan identidad operativa, seguimiento actual y contexto. Proyecto y titulo son obligatorios; precio, stock y link tienen validaciones razonables. El marketplace de la publicacion queda alineado al proyecto para evitar inconsistencias.
+
+## Cambios / bitacora operativa
+La pantalla `Cambios` es la memoria operativa central: registra que se toco en una publicacion, cuando, por que, cual era el antes/despues esperado y si ya existen snapshots posteriores para revisar impacto probable.
+
+Flujo soportado:
+
+1. Buscar cambios por descripcion, comentario, publicacion, SKU, ID externo, hipotesis o responsable.
+2. Filtrar por proyecto, publicacion, tipo de cambio y periodo rapido.
+3. Revisar desde el listado el antes/despues registrado y el estado de seguimiento:
+   - `Sin seguimiento`: no hay snapshot metrico posterior al cambio.
+   - `Con seguimiento`: hay snapshot posterior.
+   - `Lectura disponible`: hay snapshots antes y despues del cambio.
+4. Abrir el cambio para revisar decision, hipotesis, contexto operativo y snapshots anterior/posterior.
+5. Saltar desde cada cambio a la publicacion, al timeline causal o a importaciones para cargar metricas.
+6. Editar la memoria del cambio sin romper su relacion con publicacion y proyecto.
+
+El ciclo de vida del cambio es calculado desde los snapshots existentes; no agrega estados persistidos nuevos ni promete causalidad exacta.
 
 ## Competencia acotada
 La pantalla `Competencia` permite trabajar con contexto competitivo manual y comparable:
@@ -278,7 +327,7 @@ La deteccion manual de oportunidades puede crear senales adicionales sobre esos 
 3. Ir a `Publicaciones` y abrir `Mate termico acero inoxidable 1L pico cebador`.
 4. Revisar resumen de metricas, insights heuristicos y timeline causal.
 5. Entrar a `Cambios` y registrar un cambio nuevo sobre una publicacion.
-6. Ir a `Importaciones` y probar `samples/csv/metric-snapshots.sample.csv`.
+6. Ir a `Carga de datos` y probar `samples/csv/metric-snapshots.sample.csv`.
 7. Entrar a `Competencia`, abrir una busqueda monitoreada y comparar dos snapshots.
 8. Abrir un snapshot competitivo y cargar un resultado observado manual.
 9. Ir a `Oportunidades`, ejecutar `Detectar senales` y cambiar el estado de una senal.

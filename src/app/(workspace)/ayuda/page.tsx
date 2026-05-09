@@ -105,25 +105,26 @@ const helpSections: HelpSection[] = [
   },
   {
     id: "importaciones",
-    title: "Importaciones",
+    title: "Carga de datos",
     route: "/importaciones",
     summary:
-      "Carga CSV local de snapshots metricos para publicaciones propias, sin depender de APIs externas.",
+      "Entrada local de CSV para convertir historicos de publicaciones en snapshots metricos que alimentan analisis y timeline.",
     actions: [
       "Seleccionar proyecto y archivo CSV.",
       "Previsualizar separador, headers, mapping sugerido y filas detectadas.",
       "Resolver referencias a publicaciones por SKU, external id, titulo o seleccion manual.",
       "Importar snapshots metricos como visitas, ventas, conversion, ingresos, precio y stock.",
-      "Revisar historial de imports y errores de validacion.",
+      "Revisar historial de cargas, publicaciones afectadas y errores de validacion.",
     ],
     recommendedFlow: [
       "Probar primero `samples/csv/metric-snapshots.sample.csv`.",
       "Confirmar el mapping sugerido.",
-      "Importar y volver al detalle de una publicacion para ver metricas nuevas.",
+      "Importar y abrir publicaciones afectadas para ver metricas nuevas.",
     ],
     limits: [
       "Hoy importa snapshots metricos, no cambios ni resultados competitivos.",
       "Las filas invalidas se informan, pero no se corrigen automaticamente.",
+      "La creacion de publicaciones faltantes es minima y conviene completarla despues.",
     ],
   },
   {
@@ -199,7 +200,7 @@ const demoChecklist = [
   "Crear o abrir un proyecto.",
   "Crear o abrir una publicacion propia.",
   "Registrar un cambio operativo.",
-  "Importar snapshots metricos desde CSV.",
+  "Cargar snapshots metricos desde CSV.",
   "Abrir el timeline causal de la publicacion.",
   "Crear o abrir una busqueda monitoreada.",
   "Cargar snapshots competitivos y resultados observados.",

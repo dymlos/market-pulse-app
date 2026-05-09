@@ -109,9 +109,9 @@ export const insightTypeLabels: Record<InsightType, string> = {
 };
 
 export const insightConfidenceLabels: Record<InsightConfidence, string> = {
-  LOW: "bajo",
-  MEDIUM: "medio",
-  HIGH: "alto",
+  LOW: "baja",
+  MEDIUM: "media",
+  HIGH: "alta",
 };
 
 export const insightStatusLabels: Record<InsightStatus, string> = {

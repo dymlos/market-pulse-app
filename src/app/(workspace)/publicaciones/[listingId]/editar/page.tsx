@@ -34,7 +34,7 @@ export default async function EditarPublicacionPage({
       <PageHeader
         eyebrow="Editar publicacion"
         title={listing.title}
-        description="Actualiza datos operativos basicos. Los cambios de negocio conviene registrarlos tambien en la bitacora."
+        description="Actualiza la referencia operativa. Si el ajuste representa una decision de negocio, registralo tambien como cambio."
       />
 
       <FormMessage message={firstParam(query.error)} />
@@ -48,7 +48,8 @@ export default async function EditarPublicacionPage({
             Volver
           </Link>
         }
-        title="Datos de la publicacion"
+        title="Editar referencia operativa"
+        description="Mantene ordenados los datos actuales sin perder la memoria ya asociada a esta publicacion."
       >
         <ListingForm
           action={updateListing}

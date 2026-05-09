@@ -24,11 +24,24 @@ type MetricImportCounts = {
   createdListings: number;
 };
 
+export type MetricImportMetadata = {
+  snapshotDateRange?: {
+    from: string;
+    to: string;
+  };
+  affectedListings: Array<{
+    id: string;
+    title: string;
+    reference: string;
+  }>;
+};
+
 export type MetricImportResult = {
   ok: boolean;
   importId?: string;
   status: CsvImportStatus;
   counts: MetricImportCounts;
+  metadata?: MetricImportMetadata;
   issues: MetricImportIssue[];
 };
 
@@ -39,17 +52,31 @@ function compactIssues(issues: MetricImportIssue[]) {
 function buildSummary(input: {
   message: string;
   counts: MetricImportCounts;
+  metadata?: MetricImportMetadata;
   issues: MetricImportIssue[];
 }) {
   return JSON.stringify(
     {
       message: input.message,
       counts: input.counts,
+      metadata: input.metadata,
       issues: compactIssues(input.issues),
     },
     null,
     2,
   );
+}
+
+function buildDateRange(dates: Date[]) {
+  if (dates.length === 0) {
+    return undefined;
+  }
+
+  const timestamps = dates.map((date) => date.getTime());
+  return {
+    from: new Date(Math.min(...timestamps)).toISOString(),
+    to: new Date(Math.max(...timestamps)).toISOString(),
+  };
 }
 
 function statusForCounts(counts: MetricImportCounts) {
@@ -290,6 +317,12 @@ export async function importMetricCsv(input: {
   try {
     return await prisma.$transaction(async (transaction) => {
       const createdListingIds = new Map<string, string>();
+      const affectedListings = new Map<
+        string,
+        { id: string; title: string; reference: string }
+      >();
+      const listingsById = new Map(listings.map((listing) => [listing.id, listing]));
+      const persistedDates: Date[] = [];
 
       for (const draft of missingDrafts.values()) {
         const createdListing = await transaction.listing.create({
@@ -297,6 +330,11 @@ export async function importMetricCsv(input: {
           select: { id: true },
         });
         createdListingIds.set(draft.key, createdListing.id);
+        affectedListings.set(createdListing.id, {
+          id: createdListing.id,
+          title: draft.title,
+          reference: draft.reference,
+        });
       }
 
       let persistedRows = 0;
@@ -310,6 +348,15 @@ export async function importMetricCsv(input: {
           continue;
         }
 
+        const existingListing = listingsById.get(listingId);
+        if (!affectedListings.has(listingId)) {
+          affectedListings.set(listingId, {
+            id: listingId,
+            title: existingListing?.title ?? row.createListing?.title ?? row.listingReference,
+            reference: row.listingReference,
+          });
+        }
+
         await transaction.listingMetricSnapshot.upsert({
           where: {
             listingId_snapshotDate: {
@@ -321,6 +368,7 @@ export async function importMetricCsv(input: {
           create: snapshotCreateData(listingId, row.snapshotDate, row.snapshotData),
         });
         persistedRows += 1;
+        persistedDates.push(row.snapshotDate);
       }
 
       const counts: MetricImportCounts = {
@@ -329,6 +377,10 @@ export async function importMetricCsv(input: {
         invalidRows: validation.invalidRows.length,
         skippedRows: validation.skippedRows.length,
         createdListings: createdListingIds.size,
+      };
+      const metadata: MetricImportMetadata = {
+        snapshotDateRange: buildDateRange(persistedDates),
+        affectedListings: Array.from(affectedListings.values()).slice(0, 50),
       };
       const status = statusForCounts(counts);
       const csvImport = await transaction.csvImport.create({
@@ -343,6 +395,7 @@ export async function importMetricCsv(input: {
           summary: buildSummary({
             message: "Importacion de snapshots metricos finalizada.",
             counts,
+            metadata,
             issues,
           }),
         },
@@ -353,6 +406,7 @@ export async function importMetricCsv(input: {
         importId: csvImport.id,
         status,
         counts,
+        metadata,
         issues: compactIssues(issues),
       };
     });

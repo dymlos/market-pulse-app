@@ -542,14 +542,18 @@ Resultado logrado:
 - marketplace, moneda y estado con defaults razonables
 - moneda convertida en select controlado
 - estado `Archivado` bloqueado en alta y mantenido como estado posterior de ciclo de vida
+- edicion de proyectos activos/pausados ya no permite usar `Archivado` como atajo sin confirmacion
 - validacion server-side mas clara para nombre obligatorio y nombre demasiado corto
 - alta redirige al detalle del proyecto para dejar un siguiente paso util
 - listado con busqueda por nombre, filtro por estado y filtro por marketplace
 - filas enriquecidas con publicaciones, busquedas monitoreadas, imports y fecha relativa + exacta
+- contadores de publicaciones, busquedas e imports convertidos en accesos filtrados por proyecto
 - proyecto navegable por nombre y accion principal `Abrir`
 - acciones secundarias movidas a menu simple
-- archivado con confirmacion y copy que aclara que conserva memoria
+- archivado separado de la edicion normal, con confirmacion y copy que aclara que conserva memoria
 - nueva vista de detalle del proyecto con identidad, conteos, actividad reciente y ciclo de vida
+- detalle del proyecto con accesos rapidos a publicaciones, busquedas e imports filtrados
+- `Importaciones` acepta `projectId`, filtra historial y preselecciona proyecto
 - indicadores tecnicos del header relegados a `Configuracion local`
 
 Validacion:
@@ -561,6 +565,169 @@ Validacion:
 - `npm run db:reset` + `npm run db:seed`: correctos contra `tmp/proyectos-validation.db`
 - rutas `/proyectos`, `/proyectos?q=Tienda`, `/proyectos?status=ARCHIVED`, `/proyectos/nuevo`, `/proyectos/[id]`, `/proyectos/[id]/editar` y `/publicaciones?projectId=[id]`: 200
 - navegador interno: validado listado, filtros, alta sin opcion `Archivado`, edicion con moneda controlada y detalle del proyecto
+- auditoria adicional: validado que edicion de proyecto activo no muestra `Archivado` y que los accesos a publicaciones, busquedas e imports son links filtrados
+
+## Refinamiento integral del modulo Publicaciones
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- cerrar `Publicaciones` como unidad de analisis operativo de etapa 1
+- mejorar listado, busqueda, filtros, acciones y senales de seguimiento
+- reforzar el detalle como lugar donde convergen cambios, snapshots, timeline y lectura probable
+- ordenar formularios y validaciones sin cambiar el modelo de datos
+
+Alcance previsto:
+
+- copy visible de `/publicaciones`, alta, edicion y detalle
+- listado con busqueda por titulo, SKU o ID externo
+- filtros simples por proyecto, estado y condicion operativa
+- filas con ultimo cambio, ultimo snapshot, frescura y accion principal clara
+- detalle con resumen superior mas informativo, metricas mejor explicadas, insights mas legibles y timeline mas claro
+- formularios de publicacion y cambio con microcopy operativo y validaciones razonables
+
+Restricciones:
+
+- sin IA
+- sin scraping
+- sin nuevos modulos
+- sin migraciones salvo necesidad real
+- sin refactor visual general del sistema
+
+Resultado logrado:
+
+- copy del modulo ajustado para presentar `Publicaciones` como unidad de analisis operativo
+- listado con busqueda por titulo, SKU e ID externo
+- filtros por proyecto, estado y condicion operativa
+- filas enriquecidas con conteos, ultimo cambio, ultimo snapshot, senales y estado de seguimiento
+- accion principal renombrada a `Abrir analisis`
+- accion `Registrar cambio` queda visible y edicion/importacion/timeline quedan en menu secundario
+- estado vacio mejorado con CTA a crear publicacion o importar metricas
+- detalle con resumen superior de estado, proyecto, precio/stock, ultimo cambio, ultimo snapshot, seguimiento y lectura actual
+- boton redundante `Ver timeline` removido del detalle
+- resumen de metricas aclara que compara primer snapshot visible vs ultimo snapshot cargado
+- insights muestran `confianza baja/media/alta` y ocultan el bloque de guardados cuando no hay contenido
+- timeline causal reemplazado por secuencia visual diferenciada entre cambios manuales y snapshots metricos
+- formularios de alta/edicion reorganizados en identidad, seguimiento y contexto
+- formulario de cambio reorganizado como memoria operativa con antes/despues e hipotesis
+- validacion server-side agregada para URL de publicacion
+- marketplace de `Listing` alineado al marketplace del proyecto
+
+Validacion:
+
+- `npm test`: correcto
+- `npm run lint`: correcto
+- `npx tsc --noEmit --incremental false`: correcto
+- `npm run build`: correcto con `HOME` y `USERPROFILE` aislados en `tmp/home`
+- `npm run db:reset` + `npm run db:seed`: correctos contra `tmp/publicaciones-validation.db`
+- rutas `/publicaciones`, busqueda, filtros, detalle, edicion, alta, cambio nuevo e importaciones filtradas: 200
+- navegador interno: validado listado, filtro por busqueda, detalle, formularios de publicacion/cambio y ausencia del boton redundante `Ver timeline`
+- flujo real en base temporal: crear publicacion, editarla y registrar cambio conectado
+
+## Refinamiento integral del modulo Cambios
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- cerrar `Cambios` como bitacora operativa central de etapa 1
+- reforzar que cada cambio registra accion, fecha, intencion, contexto y antes/despues
+- conectar mejor cada cambio con Publicaciones, timeline causal e importaciones
+- mostrar si ya hay snapshots posteriores para revisar impacto probable
+
+Alcance:
+
+- copy visible de listado, alta, edicion y detalle
+- busqueda por descripcion, comentario, hipotesis, responsable, publicacion, SKU o ID externo
+- filtros por proyecto, publicacion, tipo y periodo rapido
+- listado enriquecido con antes/despues y estado de seguimiento calculado
+- detalle narrativo con decision, hipotesis, contexto y snapshots alrededor del cambio
+- formulario con mejores ayudas y validaciones server-side
+
+Restricciones:
+
+- sin IA
+- sin scraping
+- sin nuevas migraciones
+- sin scoring complejo ni estados persistidos nuevos
+- sin rediseño general del sistema
+
+Resultado logrado:
+
+- la pantalla ahora se presenta como `Bitacora de cambios`
+- el listado incorpora buscador y filtro de periodo (`ultimos 7 dias`, `ultimos 30 dias`, `este mes`)
+- las filas muestran tipo, detalle, responsable/comentario, publicacion, antes/despues y seguimiento posterior
+- la accion principal paso de `Detalle` a `Abrir cambio`
+- acciones secundarias conectan con timeline causal, importaciones y edicion
+- el estado de seguimiento se calcula desde snapshots:
+  - `Sin seguimiento`: no hay snapshot posterior
+  - `Con seguimiento`: hay snapshot posterior
+  - `Lectura disponible`: hay snapshot anterior y posterior
+- el detalle muestra decision registrada, hipotesis, contexto operativo y snapshots anterior/posterior
+- el formulario refuerza memoria operativa, ejemplos de antes/despues y placeholders mas accionables
+- se agregaron validaciones para fecha futura, descripcion minima y pares antes/despues incompletos cuando el tipo lo amerita
+- los accesos desde Publicaciones hacia nuevo cambio vuelven al timeline causal de la publicacion cuando corresponde
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npm test`: correcto
+- `npx tsc --noEmit --pretty false`: correcto
+- `git diff --check`: correcto
+- `npm run build`: correcto con `HOME` y `USERPROFILE` aislados en `tmp/home`
+- dev server reiniciado en `http://127.0.0.1:3000`
+- rutas `/cambios`, busqueda, periodo, filtros por proyecto/tipo, filtro por publicacion, detalle, edicion, alta con retorno y publicacion/timeline: 200
+- navegador interno: validado listado, detalle y formulario sin errores de consola
+
+## Refinamiento de Carga de datos / Importaciones
+Estado: completada en esta iteracion
+
+Objetivo:
+
+- reforzar `Importaciones` como entrada de evidencia local para el nucleo causal
+- mejorar el flujo CSV sin abrir nuevas fuentes ni cambiar el modelo de datos
+- hacer que el resultado de una carga deje acciones claras hacia Publicaciones e historial
+- enriquecer el historial para entender que entro, que fallo y que queda pendiente
+
+Alcance:
+
+- copy visible de `/importaciones`
+- panel de carga CSV, preview, mapping y resultado
+- historial de `CsvImport` con filtros y resumen operativo
+- navegacion, ayuda y documentacion
+
+Restricciones:
+
+- sin IA
+- sin scraping
+- sin nuevas migraciones
+- sin importar nuevos tipos de CSV fuera de snapshots metricos
+- sin convertir la seccion en un modulo de analisis paralelo
+
+Resultado logrado:
+
+- la navegacion muestra `Carga de datos`, manteniendo la ruta `/importaciones`
+- la pantalla explica que el CSV alimenta Publicaciones, Cambios, timeline causal e insights
+- el panel de importacion muestra pasos, formato recomendado y sample local sugerido
+- el mapping de columnas tiene ayudas contextuales y obligatoriedad mas clara
+- la opcion de crear publicaciones faltantes aclara que crea registros minimos para completar despues
+- el resultado post-importacion oculta IDs tecnicos y muestra filas, rango de snapshots, publicaciones afectadas, errores y acciones siguientes
+- las acciones post-importacion conectan con publicaciones con metricas, historial filtrado y nueva carga
+- el historial suma filtros por archivo/proyecto, proyecto, estado y periodo
+- cada fila del historial muestra evidencia cargada, rango de fechas, publicaciones afectadas, observaciones y detalle expandible
+- `CsvImport.summary` guarda metadata extendida para nuevas cargas sin cambiar el schema
+
+Validacion:
+
+- `npm run lint`: correcto
+- `npm test`: correcto
+- `npx tsc --noEmit --pretty false`: correcto
+- `git diff --check`: correcto
+- `npm run build`: correcto con `HOME` y `USERPROFILE` aislados en `tmp/home`
+- dev server reiniciado en `http://127.0.0.1:3000`
+- rutas `/importaciones`, `/importaciones?status=PROCESSED`, `/importaciones?q=sample` y `/importaciones?projectId=[id]&timeframe=LAST_30_DAYS`: 200
+- API preview CSV: 200 con 3 filas validas sobre sample local
+- API importacion CSV: validada con proyecto temporal y borrado posterior; resultado `PROCESSED`, 2 filas guardadas, 2 publicaciones afectadas y rango de fechas persistido en `CsvImport.summary`
+- navegador interno: `/importaciones` renderizo `Carga de datos`, flujo guiado e historial sin errores de consola
 
 ## Regla de priorizacion
 Si aparece una duda entre construir algo vistoso de competencia o fortalecer causalidad, memoria operativa o carga local de datos:

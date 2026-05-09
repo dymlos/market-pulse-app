@@ -1,9 +1,12 @@
 import {
   ChangeEventType,
+  CsvImportStatus,
+  ListingStatus,
   OpportunitySeverity,
   OpportunityStatus,
   ProjectStatus,
 } from "@/generated/prisma";
+import type { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { compareSearchSnapshots } from "@/lib/search-snapshot-comparison";
 
@@ -13,6 +16,149 @@ type ProjectFilters = {
   marketplace?: string;
   includeArchived?: boolean;
 };
+
+export const LISTING_LOW_STOCK_THRESHOLD = 5;
+
+export type ListingTrackingFilter =
+  | "WITH_CHANGES"
+  | "WITHOUT_CHANGES"
+  | "WITH_SNAPSHOTS"
+  | "WITHOUT_SNAPSHOTS"
+  | "WITH_ACTIVE_OPPORTUNITIES";
+
+export type ListingStockFilter = "LOW_STOCK";
+
+export type ListingDataFilter =
+  | ListingTrackingFilter
+  | ListingStockFilter
+  | "WITH_OPPORTUNITIES";
+
+type ListingFilters = {
+  projectId?: string;
+  query?: string;
+  status?: ListingStatus;
+  trackingState?: ListingTrackingFilter;
+  stockState?: ListingStockFilter;
+  dataState?: ListingDataFilter;
+};
+
+export type ChangeTimeFilter = "LAST_7_DAYS" | "LAST_30_DAYS" | "THIS_MONTH";
+
+type ChangeEventFilters = {
+  projectId?: string;
+  listingId?: string;
+  type?: ChangeEventType;
+  query?: string;
+  timeframe?: ChangeTimeFilter;
+};
+
+export type CsvImportTimeFilter = "LAST_7_DAYS" | "LAST_30_DAYS";
+
+type CsvImportFilters = {
+  projectId?: string;
+  query?: string;
+  status?: CsvImportStatus;
+  timeframe?: CsvImportTimeFilter;
+};
+
+function getListingTrackingFilter(filters: ListingFilters): ListingTrackingFilter | undefined {
+  const trackingState = filters.trackingState ?? filters.dataState;
+
+  if (trackingState === "WITH_OPPORTUNITIES") {
+    return "WITH_ACTIVE_OPPORTUNITIES";
+  }
+
+  if (trackingState === "LOW_STOCK") {
+    return undefined;
+  }
+
+  return trackingState;
+}
+
+function getListingStockFilter(filters: ListingFilters): ListingStockFilter | undefined {
+  return filters.stockState ?? (filters.dataState === "LOW_STOCK" ? "LOW_STOCK" : undefined);
+}
+
+function getChangeTimeRange(timeframe?: ChangeTimeFilter): Prisma.DateTimeFilter | undefined {
+  const now = new Date();
+
+  if (timeframe === "LAST_7_DAYS") {
+    const since = new Date(now);
+    since.setDate(since.getDate() - 7);
+    return { gte: since };
+  }
+
+  if (timeframe === "LAST_30_DAYS") {
+    const since = new Date(now);
+    since.setDate(since.getDate() - 30);
+    return { gte: since };
+  }
+
+  if (timeframe === "THIS_MONTH") {
+    return { gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+  }
+
+  return undefined;
+}
+
+function getCsvImportTimeRange(
+  timeframe?: CsvImportTimeFilter,
+): Prisma.DateTimeFilter | undefined {
+  const now = new Date();
+
+  if (timeframe === "LAST_7_DAYS") {
+    const since = new Date(now);
+    since.setDate(since.getDate() - 7);
+    return { gte: since };
+  }
+
+  if (timeframe === "LAST_30_DAYS") {
+    const since = new Date(now);
+    since.setDate(since.getDate() - 30);
+    return { gte: since };
+  }
+
+  return undefined;
+}
+
+async function enrichChangesWithFollowUp<
+  T extends { listingId: string; occurredAt: Date },
+>(changes: T[]) {
+  if (changes.length === 0) {
+    return [];
+  }
+
+  const listingIds = Array.from(new Set(changes.map((change) => change.listingId)));
+  const snapshots = await prisma.listingMetricSnapshot.findMany({
+    where: {
+      listingId: { in: listingIds },
+    },
+    orderBy: { snapshotDate: "asc" },
+  });
+
+  const snapshotsByListing = new Map<string, typeof snapshots>();
+  for (const snapshot of snapshots) {
+    const current = snapshotsByListing.get(snapshot.listingId) ?? [];
+    current.push(snapshot);
+    snapshotsByListing.set(snapshot.listingId, current);
+  }
+
+  return changes.map((change) => {
+    const listingSnapshots = snapshotsByListing.get(change.listingId) ?? [];
+    const previousSnapshot =
+      listingSnapshots
+        .filter((snapshot) => snapshot.snapshotDate <= change.occurredAt)
+        .at(-1) ?? null;
+    const followUpSnapshot =
+      listingSnapshots.find((snapshot) => snapshot.snapshotDate > change.occurredAt) ?? null;
+
+    return {
+      ...change,
+      previousSnapshot,
+      followUpSnapshot,
+    };
+  });
+}
 
 export async function getDashboardOverview() {
   const recentSince = new Date();
@@ -169,17 +315,56 @@ export async function getProjectDetail(projectId: string) {
   };
 }
 
-export async function getListings(filters: { projectId?: string } = {}) {
+export async function getListings(filters: ListingFilters = {}) {
+  const trackingState = getListingTrackingFilter(filters);
+  const stockState = getListingStockFilter(filters);
+
   return prisma.listing.findMany({
     where: {
       projectId: filters.projectId || undefined,
+      status: filters.status || undefined,
+      OR: filters.query
+        ? [
+            { title: { contains: filters.query } },
+            { sku: { contains: filters.query } },
+            { externalId: { contains: filters.query } },
+          ]
+        : undefined,
+      changeEvents:
+        trackingState === "WITH_CHANGES"
+          ? { some: {} }
+          : trackingState === "WITHOUT_CHANGES"
+            ? { none: {} }
+            : undefined,
+      metricSnapshots:
+        trackingState === "WITH_SNAPSHOTS"
+          ? { some: {} }
+          : trackingState === "WITHOUT_SNAPSHOTS"
+            ? { none: {} }
+            : undefined,
+      availableStock:
+        stockState === "LOW_STOCK" ? { lte: LISTING_LOW_STOCK_THRESHOLD } : undefined,
+      opportunitySignals:
+        trackingState === "WITH_ACTIVE_OPPORTUNITIES"
+          ? { some: { status: { in: [OpportunityStatus.NEW, OpportunityStatus.REVIEWED] } } }
+          : undefined,
     },
     include: {
       project: true,
+      changeEvents: {
+        orderBy: { occurredAt: "desc" },
+        take: 1,
+      },
+      metricSnapshots: {
+        orderBy: { snapshotDate: "desc" },
+        take: 1,
+      },
       _count: {
         select: {
           changeEvents: true,
           metricSnapshots: true,
+          insights: true,
+          opportunitySignals: true,
         },
       },
     },
@@ -202,6 +387,14 @@ export async function getListingDetail(listingId: string) {
     where: { id: listingId },
     include: {
       project: true,
+      _count: {
+        select: {
+          changeEvents: true,
+          metricSnapshots: true,
+          insights: true,
+          opportunitySignals: true,
+        },
+      },
       changeEvents: {
         orderBy: { occurredAt: "desc" },
         take: 60,
@@ -224,16 +417,33 @@ export async function getListingForEdit(listingId: string) {
   });
 }
 
-export async function getChangeEvents(filters: {
-  projectId?: string;
-  listingId?: string;
-  type?: ChangeEventType;
-} = {}) {
-  return prisma.changeEvent.findMany({
+export async function getChangeEvents(filters: ChangeEventFilters = {}) {
+  const andClauses: Prisma.ChangeEventWhereInput[] = [];
+
+  if (filters.projectId) {
+    andClauses.push({ listing: { projectId: filters.projectId } });
+  }
+
+  if (filters.query) {
+    andClauses.push({
+      OR: [
+        { detail: { contains: filters.query } },
+        { comment: { contains: filters.query } },
+        { actorName: { contains: filters.query } },
+        { hypothesis: { contains: filters.query } },
+        { listing: { title: { contains: filters.query } } },
+        { listing: { sku: { contains: filters.query } } },
+        { listing: { externalId: { contains: filters.query } } },
+      ],
+    });
+  }
+
+  const changes = await prisma.changeEvent.findMany({
     where: {
       listingId: filters.listingId || undefined,
       type: filters.type || undefined,
-      listing: filters.projectId ? { projectId: filters.projectId } : undefined,
+      occurredAt: getChangeTimeRange(filters.timeframe),
+      AND: andClauses.length > 0 ? andClauses : undefined,
     },
     include: {
       listing: {
@@ -244,10 +454,12 @@ export async function getChangeEvents(filters: {
     },
     orderBy: { occurredAt: "desc" },
   });
+
+  return enrichChangesWithFollowUp(changes);
 }
 
 export async function getChangeEventDetail(changeEventId: string) {
-  return prisma.changeEvent.findUnique({
+  const change = await prisma.changeEvent.findUnique({
     where: { id: changeEventId },
     include: {
       listing: {
@@ -257,6 +469,13 @@ export async function getChangeEventDetail(changeEventId: string) {
       },
     },
   });
+
+  if (!change) {
+    return null;
+  }
+
+  const [enrichedChange] = await enrichChangesWithFollowUp([change]);
+  return enrichedChange;
 }
 
 export async function getChangeEventForEdit(changeEventId: string) {
@@ -398,10 +617,20 @@ export async function getCompetitorOptions(projectId: string) {
   });
 }
 
-export async function getCsvImports(projectId?: string) {
+export async function getCsvImports(filters: string | CsvImportFilters = {}) {
+  const normalizedFilters = typeof filters === "string" ? { projectId: filters } : filters;
+
   return prisma.csvImport.findMany({
     where: {
-      projectId: projectId || undefined,
+      projectId: normalizedFilters.projectId || undefined,
+      status: normalizedFilters.status || undefined,
+      importedAt: getCsvImportTimeRange(normalizedFilters.timeframe),
+      OR: normalizedFilters.query
+        ? [
+            { fileName: { contains: normalizedFilters.query } },
+            { project: { name: { contains: normalizedFilters.query } } },
+          ]
+        : undefined,
     },
     include: {
       project: true,

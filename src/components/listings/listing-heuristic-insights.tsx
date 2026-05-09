@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import type { HeuristicInsight, HeuristicInsightCategory } from "@/lib/causal-timeline";
 import { formatDateTime } from "@/lib/format";
 import {
-  insightConfidenceLabels,
   insightConfidenceTone,
   insightStatusLabels,
   insightTypeLabels,
@@ -18,8 +17,10 @@ export function ListingHeuristicInsights({
   heuristicInsights,
   storedInsights,
 }: ListingHeuristicInsightsProps) {
+  const hasStoredInsights = storedInsights.length > 0;
+
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+    <div className={hasStoredInsights ? "grid gap-5 xl:grid-cols-[1.1fr_0.9fr]" : "space-y-3"}>
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-ink">Lectura heuristica actual</h3>
         {heuristicInsights.map((insight) => (
@@ -27,7 +28,7 @@ export function ListingHeuristicInsights({
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={categoryTone(insight.category)}>{insight.category}</Badge>
               <Badge tone={insightConfidenceTone(insight.confidence)}>
-                {`confianza ${insightConfidenceLabels[insight.confidence]}`}
+                {confidenceText(insight.confidence)}
               </Badge>
             </div>
             <h4 className="mt-3 text-sm font-semibold text-ink">{insight.title}</h4>
@@ -43,16 +44,16 @@ export function ListingHeuristicInsights({
         ))}
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-ink">Insights guardados</h3>
-        {storedInsights.length > 0 ? (
+      {hasStoredInsights ? (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-ink">Insights guardados</h3>
           <div className="space-y-3">
             {storedInsights.map((insight) => (
               <article key={insight.id} className="rounded-2xl border border-line bg-panel px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{insightTypeLabels[insight.type]}</Badge>
                   <Badge tone={insightConfidenceTone(insight.confidence)}>
-                    {`confianza ${insightConfidenceLabels[insight.confidence]}`}
+                    {confidenceText(insight.confidence)}
                   </Badge>
                   <Badge tone="muted">{insightStatusLabels[insight.status]}</Badge>
                 </div>
@@ -61,15 +62,20 @@ export function ListingHeuristicInsights({
               </article>
             ))}
           </div>
-        ) : (
-          <p className="rounded-2xl border border-line bg-panel px-4 py-3 text-sm leading-6 text-muted">
-            No hay insights guardados para esta publicacion. La lectura de la izquierda se calcula en
-            tiempo de consulta y no se persiste automaticamente.
-          </p>
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function confidenceText(confidence: "LOW" | "MEDIUM" | "HIGH") {
+  const labels = {
+    LOW: "confianza baja",
+    MEDIUM: "confianza media",
+    HIGH: "confianza alta",
+  };
+
+  return labels[confidence];
 }
 
 function categoryTone(category: HeuristicInsightCategory) {

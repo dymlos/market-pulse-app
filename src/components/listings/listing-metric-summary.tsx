@@ -8,9 +8,28 @@ type ListingMetricSummaryProps = {
 
 export function ListingMetricSummaryPanel({ summary, currencyCode }: ListingMetricSummaryProps) {
   const latest = summary.latestSnapshot;
+  const hasComparison =
+    summary.snapshotCount >= 2 && summary.firstSnapshot !== null && summary.latestSnapshot !== null;
 
   return (
     <div className="space-y-5">
+      <div className="rounded-2xl border border-line bg-panel-raised px-4 py-3 text-sm leading-6 text-muted">
+        {hasComparison && summary.firstSnapshot && summary.latestSnapshot ? (
+          <>
+            Ventana comparada: primer snapshot visible del{" "}
+            <span className="font-semibold text-ink">{formatDate(summary.firstSnapshot.snapshotDate)}</span>{" "}
+            contra ultimo snapshot cargado del{" "}
+            <span className="font-semibold text-ink">{formatDate(summary.latestSnapshot.snapshotDate)}</span>.
+            La variacion es descriptiva y no prueba causalidad por si sola.
+          </>
+        ) : (
+          <>
+            Todavia no hay una ventana completa de comparacion. Carga al menos dos snapshots para leer
+            una variacion antes/despues con mas contexto.
+          </>
+        )}
+      </div>
+
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <SummaryBox label="Snapshots" value={summary.snapshotCount.toString()} />
         <SummaryBox label="Cambios" value={summary.changeCount.toString()} />
@@ -34,44 +53,46 @@ export function ListingMetricSummaryPanel({ summary, currencyCode }: ListingMetr
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-line">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-line text-left">
-            <thead className="bg-panel-raised">
-              <tr>
-                <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Metrica
-                </th>
-                <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Primer snapshot
-                </th>
-                <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Ultimo snapshot
-                </th>
-                <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
-                  Variacion
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line bg-panel">
-              {summary.variations.map((delta) => (
-                <tr key={delta.key}>
-                  <td className="px-4 py-3 text-sm font-semibold text-ink">{delta.label}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
-                    {formatMetricValue(delta.firstValue, delta.unit, currencyCode)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
-                    {formatMetricValue(delta.lastValue, delta.unit, currencyCode)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
-                    {formatMetricDelta(delta, currencyCode)}
-                  </td>
+      {hasComparison ? (
+        <div className="overflow-hidden rounded-2xl border border-line">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-line text-left">
+              <thead className="bg-panel-raised">
+                <tr>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                    Metrica
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                    Primer snapshot
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                    Ultimo snapshot
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+                    Variacion
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-line bg-panel">
+                {summary.variations.map((delta) => (
+                  <tr key={delta.key}>
+                    <td className="px-4 py-3 text-sm font-semibold text-ink">{delta.label}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
+                      {formatMetricValue(delta.firstValue, delta.unit, currencyCode)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
+                      {formatMetricValue(delta.lastValue, delta.unit, currencyCode)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-ink">
+                      {formatMetricDelta(delta, currencyCode)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

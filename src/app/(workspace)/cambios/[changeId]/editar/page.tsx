@@ -29,9 +29,9 @@ export default async function EditarCambioPage({ params, searchParams }: EditarC
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Editar cambio"
+        eyebrow="Editar memoria operativa"
         title={changeEvent.detail}
-        description="Ajusta el registro operativo sin perder su vinculacion con la publicacion."
+        description="Corrige la decision registrada, sus valores antes/despues o la hipotesis sin perder la vinculacion con el timeline."
       />
 
       <FormMessage message={firstParam(query.error)} />
@@ -45,7 +45,8 @@ export default async function EditarCambioPage({ params, searchParams }: EditarC
             Volver
           </Link>
         }
-        title="Datos del cambio"
+        title="Memoria del cambio"
+        description="Mantene la accion concreta, el contexto y la expectativa suficientemente claros para revisarlos despues con metricas."
       >
         <ChangeEventForm
           action={updateChangeEvent}

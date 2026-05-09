@@ -22,7 +22,7 @@ export default async function NuevaPublicacionPage({ searchParams }: NuevaPublic
       <PageHeader
         eyebrow="Nueva publicacion"
         title="Crear publicacion"
-        description="Carga una publicacion propia para poder asociarle cambios operativos y snapshots metricos."
+        description="Carga la unidad de seguimiento donde despues vas a registrar cambios, importar metricas y leer impacto probable."
       />
 
       <FormMessage message={firstParam(params.error)} />
@@ -36,7 +36,8 @@ export default async function NuevaPublicacionPage({ searchParams }: NuevaPublic
             Volver
           </Link>
         }
-        title="Datos basicos"
+        title="Alta de publicacion"
+        description="Empeza con identidad y estado actual. La memoria causal crece cuando registres cambios y snapshots."
       >
         <ListingForm
           action={createListing}

@@ -18,6 +18,54 @@ Preparar una app web real que corra primero en una sola PC, sin hosting obligato
 - `SQLite`
 
 ## Decisiones recientes
+### Refinamiento de Carga de datos / Importaciones
+Se mantiene la ruta `/importaciones` y el modelo `CsvImport`, pero la experiencia visible pasa a tratarse como `Carga de datos`:
+
+- la seccion se presenta como entrada de evidencia para Publicaciones, Cambios, timeline causal e insights
+- el flujo CSV se guia por pasos: proyecto, archivo, preview, mapping, resolucion e importacion
+- el resultado post-importacion muestra filas guardadas, observaciones, rango de snapshots y publicaciones afectadas
+- el historial incorpora filtros por proyecto, archivo/proyecto, estado y periodo
+- los detalles tecnicos como IDs internos quedan fuera de la experiencia principal
+- el `summary` JSON de `CsvImport` se reutiliza para guardar metadata extendida sin migrar schema
+
+La decision mantiene Importaciones como soporte operativo independiente, no como modulo de analisis principal.
+
+### Refinamiento del modulo Cambios
+Se cerro `Cambios` como bitacora operativa central sin cambiar el schema:
+
+- el listado suma busqueda textual y filtro rapido por periodo
+- cada fila muestra antes/despues cuando existe y una senal calculada de seguimiento posterior
+- el estado de seguimiento no se persiste: se deriva de snapshots metricos anteriores y posteriores al `ChangeEvent`
+- el detalle deja de ser una ficha tecnica y muestra decision, hipotesis, contexto y snapshots alrededor del cambio
+- las acciones conectan cada cambio con publicacion, timeline causal e importaciones
+- las validaciones server-side bloquean fechas futuras, descripciones demasiado cortas y pares antes/despues incompletos
+
+La decision mantiene `ChangeEvent` como memoria operativa del nucleo causal local-first. No se agregan estados persistidos ni scoring complejo: la lectura se calcula con datos cargados.
+
+### Refinamiento del modulo Publicaciones
+Se cerro `Publicaciones` como unidad de analisis operativo de etapa 1 sin cambiar el schema:
+
+- el listado deja de ser solo administrativo y muestra busqueda, filtros y estado de seguimiento
+- las filas usan datos existentes: conteos, ultimo cambio, ultimo snapshot, senales y stock
+- la accion principal es abrir el analisis; registrar cambio queda como accion secundaria visible; editar queda relegado al menu
+- el detalle resume estado, proyecto, ultimo cambio, ultimo snapshot, seguimiento y lectura heuristica actual
+- el timeline se muestra como secuencia diferenciada de cambios manuales y snapshots metricos
+- los formularios separan identidad, seguimiento y contexto, con validacion server-side de link
+- el marketplace de `Listing` se alinea al proyecto para evitar inconsistencias entre entidades
+
+La decision mantiene `Listing` como punto de convergencia del nucleo causal local-first: cambios, metricas, timeline e hipotesis prudentes.
+
+### Refinamiento del modulo Proyectos
+Se cerro `Proyectos` como entidad navegable de etapa 1 sin cambiar el schema:
+
+- el proyecto se trata como espacio de trabajo para marca, seller o cuenta operativa
+- alta y edicion usan defaults controlados para marketplace, moneda y estado
+- `ARCHIVED` queda como estado de ciclo de vida, pero el archivado se dispara desde una accion separada con confirmacion
+- el detalle del proyecto reune contexto existente: publicaciones, cambios, snapshots metricos, busquedas e imports
+- los enlaces hacia publicaciones, competencia e importaciones usan filtros por `projectId`
+
+La decision mantiene `Project` como raiz organizativa del MVP local-first, sin crear nuevos modulos ni duplicar relaciones.
+
 ### Hardening y cierre de etapa 1
 Se cerro la etapa 1 sin cambiar el schema ni abrir nuevos modulos:
 
@@ -116,7 +164,7 @@ La importacion de metricas se mantiene dentro del monolito local-first:
 
 El flujo no usa APIs externas ni scraping. Cada fila valida termina asociada a un `Listing` existente o, si el usuario lo habilita, a un `Listing` creado durante la importacion. Los snapshots se guardan con upsert sobre `listingId + snapshotDate` para que reimportar un archivo corrija valores sin duplicar fechas.
 
-Las filas invalidas u omitidas no cortan toda la carga. `CsvImport` guarda `totalRows`, `validRows`, `invalidRows`, `status` y un `summary` JSON con `skippedRows`, `createdListings` e issues compactos.
+Las filas invalidas u omitidas no cortan toda la carga. `CsvImport` guarda `totalRows`, `validRows`, `invalidRows`, `status` y un `summary` JSON con `skippedRows`, `createdListings`, rango de snapshots, publicaciones afectadas e issues compactos.
 
 ## Competencia acotada
 La capa competitiva usa las entidades existentes:
